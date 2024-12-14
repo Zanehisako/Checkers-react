@@ -8,6 +8,9 @@ const PORT = 3001;
 const app = express();
 
 app.use(cors());
+
+var pieces = [];
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
