@@ -3,24 +3,32 @@ import { Piece } from "./piece";
 import { Cell } from "./cell";
 import io from "socket.io-client";
 
-const socket = io("http://192.168.1.7:3000", {
+interface Position {
+  index: number;
+  value: number;
+}
+
+const socket = io("http://192.168.1.7:3001", {
   transports: ["websocket"],
 });
 
 export function Board() {
+  useEffect(() => {
+    socket.on("init", (boards: Position[][]) => {
+      console.log("boards", boards);
+      SetBlack(boards[0]);
+      SetWhite(boards[1]);
+    });
+  }, []);
   const [cellIndex, SetCell] = useState([0, 0]);
   const board_size = 8;
-  const [white_pieces_positions, SetWhite] = useState([]);
-  const [black_pieces_positions, SetBlack] = useState([]);
+  const [white_pieces_positions, SetWhite] = useState<Position[]>([]);
+  const [black_pieces_positions, SetBlack] = useState<Position[]>([]);
 
-  /*const addPosition = (newPosition: number[], type: number) => {
-    SetBlack;
-  };*/
-
-  useEffect(() => {
-    socket.on("move black", (piece) => {
-      // SetBlack;
-    });
+  socket.on("init", (boards: Position[][]) => {
+    console.log("boards", boards);
+    SetBlack(boards[0]);
+    SetWhite(boards[1]);
   });
   const black_pieces = () => {
     const pieces = [];
@@ -37,6 +45,7 @@ export function Board() {
               x: i,
               y: j,
               onSelect: SetCell,
+              onMove: SetBlack,
             }),
           );
         }
@@ -60,6 +69,7 @@ export function Board() {
               x: i,
               y: j,
               onSelect: SetCell,
+              onMove: SetWhite,
             }),
           );
         }

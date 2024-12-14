@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 
+interface Position {
+  index: number;
+  value: number;
+}
+
 interface PieceProps {
   index: number;
   SelectedIndex: number[];
@@ -8,6 +13,7 @@ interface PieceProps {
   x: number;
   y: number;
   onSelect: React.Dispatch<React.SetStateAction<number[]>>;
+  onMove: React.Dispatch<React.SetStateAction<Position[]>>;
 }
 
 export function Piece({
