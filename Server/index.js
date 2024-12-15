@@ -56,23 +56,23 @@ const initboard = () => {
 var boards = initboard();
 
 const modifyPosition = (newPosition) => {
-  console.log('newPosition:', newPosition)
-  console.log('newPosition.index:', newPosition.position.index)
+  console.log("newPosition:", newPosition);
+  console.log("newPosition.index:", newPosition.position.index);
   switch (newPosition.type) {
     case 0:
-      console.log('boards[0] before', boards[0]);
-      const index = boards[0].findIndex((item) => item.index === newPosition.position.index);
-      boards[0][index] = newPosition.position
+      const index_black = boards[0].findIndex(
+        (item) => item.index === newPosition.position.index,
+      );
+      boards[0][index] = newPosition.position;
 
-
-      console.log('boards[0] after', boards[0]);
       return boards;
 
     case 1:
+      const index_white = boards[1].findIndex(
+        (item) => item.index === newPosition.position.index,
+      );
 
-      boards[1].at(
-        boards[1].findIndex((item) => item.index === newPosition.index),
-      ) = newPosition;
+      boards[1][index_white] = newPosition.position;
       return boards;
   }
 };
@@ -80,14 +80,13 @@ const modifyPosition = (newPosition) => {
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
 
-  console.log(boards);
   socket.emit("init", boards);
   socket.on("move", (position) => {
-    socket.emit("update", modifyPosition(position));
+    boards = modifyPosition(position);
+    socket.emit("update", boards);
   });
 
   socket.on("move piece", (position) => {
-
     socket.emit("update piece", position);
     socket.broadcast.emit("update piece", position);
   });

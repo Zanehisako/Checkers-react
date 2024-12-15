@@ -59,7 +59,6 @@ export function Piece({
         y: type === 0 ? position_y - 1 : position_y + 1,
       };
       socket.emit("move piece", position);
-      onMove(position, type);
     } else {
       const position = {
         index: index,

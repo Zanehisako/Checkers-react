@@ -8,8 +8,13 @@ interface Position {
   x: number;
   y: number;
 }
+enum types {
+  Black,
+  White,
+}
 
 interface BoardProp {
+  type: types;
   positions: Position[];
   cellIndex: number[];
   SetCell: React.Dispatch<React.SetStateAction<number[]>>;
@@ -20,80 +25,84 @@ const socket = io("http://192.168.1.7:3001", {
   transports: ["websocket"],
 });
 
-export function Board({ positions, cellIndex, SetCell, move }: BoardProp) {
-  const board_size = 8;
-  const pieces = () => {
-    const pieces = [];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 5; j < 8; j++) {
-        const index = i + j * board_size;
-        if ((i + j) % 2 !== 0) {
-          pieces.push(
-            Piece({
-              index:
-                positions.length !== 0
-                  ? positions.find((item) => index === item.index)?.index!
-                  : index,
-              SelectedIndex: cellIndex,
-              type: 0,
-              source: "/pieces/black piece.png",
-              x:
-                positions.length !== 0
-                  ? positions[
-                    positions.findIndex((item) => index === item.index)!
-                  ].x
-                  : i,
-              y:
-                positions.length !== 0
-                  ? positions[
-                    positions.findIndex((item) => index === item.index)!
-                  ].y
-                  : j,
-              onSelect: SetCell,
-              onMove: move,
-            }),
-          );
-        }
-      }
-    }
+export function Board({
+  type,
+  positions,
+  cellIndex,
+  SetCell,
+  move,
+}: BoardProp) {
+  const [positions_state, SetPosition] = useState<Position[]>(positions);
+  useEffect(() => {
+    console.log("init");
 
+    socket.on("init", (boards: Position[][]) => {
+      positions_state === boards[0] || boards[1]
+        ? console.log("the same")
+        : console.log("not the same should rerender");
+      SetPosition(type == types.Black ? boards[0] : boards[1]);
+      console.log("finished set board");
+    });
+  }, []);
+  console.log("positions_state", positions_state);
+
+  const pieces = () => {
+    var pieces = [];
+    for (let index = 0; index < positions_state.length; index++) {
+      pieces.push(
+        Piece({
+          index: positions_state[index].index,
+          SelectedIndex: cellIndex,
+          type: 0,
+          source:
+            type == types.Black
+              ? "/pieces/black piece.png"
+              : "/pieces/white piece.png",
+          x: positions_state[index].x,
+          y: positions_state[index].y,
+          onSelect: SetCell,
+          onMove: move,
+        }),
+      );
+    }
     return pieces;
   };
   return pieces;
 }
 
+function init(type: types) {
+  const board_size = 8;
+  var positions: Position[] = [];
+  switch (type) {
+    case types.Black:
+      for (let i = 0; i < 8; i++) {
+        for (let j = 5; j < 8; j++) {
+          const index = i + j * board_size;
+          if ((i + j) % 2 !== 0) {
+            const position: Position = { index: index, x: i, y: j };
+            positions.push(position);
+          }
+        }
+      }
+      return positions;
+
+    case types.White:
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 3; j++) {
+          const index = i + j * board_size;
+          if ((i + j) % 2 !== 0) {
+            const position: Position = { index: index, x: i, y: j };
+            positions.push(position);
+          }
+        }
+      }
+      return positions;
+  }
+}
+
 export function MainBoard() {
   const [black_pieces_positions, SetBlack] = useState<Position[]>([]);
   const [white_pieces_positions, SetWhite] = useState<Position[]>([]);
-  const [forceRender, setForceRender] = useState(false);
-
-  useEffect(() => {
-    console.log("init");
-
-    socket.on("init", (boards: Position[][]) => {
-      console.log("boards", boards);
-      SetBlack(boards[0]);
-      SetWhite(boards[1]);
-    });
-
-    socket.on("update", (newPositions: Position[][]) => {
-      SetBlack((prev) =>
-        JSON.stringify(prev) !== JSON.stringify(newPositions[0])
-          ? [...newPositions[0]]
-          : prev,
-      );
-      SetWhite((prev) =>
-        JSON.stringify(prev) !== JSON.stringify(newPositions[1])
-          ? [...newPositions[1]]
-          : prev,
-      );
-      setForceRender((prev) => !prev);
-    });
-    return () => {
-      socket.off("init");
-      socket.off("update");
-    };
-  }, []);
 
   const [cellIndex, SetCell] = useState([0, 0]);
   const board_size = 8;
@@ -102,51 +111,17 @@ export function MainBoard() {
     socket.emit("move", { position, type });
   };
 
-  const white_pieces = () => {
-    const pieces = [];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 3; j++) {
-        if ((i + j) % 2 !== 0) {
-          const index = i + j * board_size;
-          console.log(index);
-
-          pieces.push(
-            Piece({
-              index:
-                white_pieces_positions.length !== 0
-                  ? white_pieces_positions.find((item) => index === item.index)
-                    ?.index!
-                  : index,
-              SelectedIndex: cellIndex,
-              type: 0,
-              source: "/pieces/white piece.png",
-              x:
-                white_pieces_positions.length !== 0
-                  ? white_pieces_positions[
-                    white_pieces_positions.findIndex(
-                      (item) => index === item.index,
-                    )!
-                  ].x
-                  : i,
-              y:
-                white_pieces_positions.length !== 0
-                  ? white_pieces_positions[
-                    white_pieces_positions.findIndex(
-                      (item) => index === item.index,
-                    )!
-                  ].y
-                  : j,
-              onSelect: SetCell,
-              onMove: move,
-            }),
-          );
-        }
-      }
-    }
-    return pieces;
-  };
   const Black_pieces = Board({
-    positions: black_pieces_positions,
+    type: types.Black,
+    positions: init(0)!,
+    cellIndex,
+    SetCell,
+    move,
+  });
+
+  const White_pieces = Board({
+    type: types.White,
+    positions: init(1)!,
     cellIndex,
     SetCell,
     move,
@@ -173,7 +148,7 @@ export function MainBoard() {
     <div className="Board">
       {cells()}
       <Black_pieces />
-      {white_pieces()}
+      <White_pieces />
     </div>
   );
 }
