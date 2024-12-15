@@ -5,7 +5,8 @@ import io from "socket.io-client";
 
 interface Position {
   index: number;
-  value: number;
+  x: number;
+  y: number;
 }
 
 const socket = io("http://192.168.1.7:3001", {
@@ -13,23 +14,44 @@ const socket = io("http://192.168.1.7:3001", {
 });
 
 export function Board() {
+  const [black_pieces_positions, SetBlack] = useState<Position[]>([]);
+  const [white_pieces_positions, SetWhite] = useState<Position[]>([]);
+  const [forceRender, setForceRender] = useState(false);
+
   useEffect(() => {
+    console.log("init");
+
     socket.on("init", (boards: Position[][]) => {
       console.log("boards", boards);
       SetBlack(boards[0]);
       SetWhite(boards[1]);
     });
+
+    socket.on("update", (newPositions: Position[][]) => {
+      SetBlack((prev) =>
+        JSON.stringify(prev) !== JSON.stringify(newPositions[0])
+          ? [...newPositions[0]]
+          : prev,
+      );
+      SetWhite((prev) =>
+        JSON.stringify(prev) !== JSON.stringify(newPositions[1])
+          ? [...newPositions[1]]
+          : prev,
+      );
+      setForceRender((prev) => !prev);
+    });
+    return () => {
+      socket.off("init");
+      socket.off("update");
+    };
   }, []);
+
   const [cellIndex, SetCell] = useState([0, 0]);
   const board_size = 8;
-  const [white_pieces_positions, SetWhite] = useState<Position[]>([]);
-  const [black_pieces_positions, SetBlack] = useState<Position[]>([]);
 
-  socket.on("init", (boards: Position[][]) => {
-    console.log("boards", boards);
-    SetBlack(boards[0]);
-    SetWhite(boards[1]);
-  });
+  const move = (position: Position, type: number) => {
+    socket.emit("move", { position, type });
+  };
   const black_pieces = () => {
     const pieces = [];
     for (let i = 0; i < 8; i++) {
@@ -38,14 +60,32 @@ export function Board() {
         if ((i + j) % 2 !== 0) {
           pieces.push(
             Piece({
-              index: index,
+              index:
+                black_pieces_positions.length !== 0
+                  ? black_pieces_positions.find((item) => index === item.index)
+                    ?.index!
+                  : index,
               SelectedIndex: cellIndex,
               type: 0,
               source: "/pieces/black piece.png",
-              x: i,
-              y: j,
+              x:
+                black_pieces_positions.length !== 0
+                  ? black_pieces_positions[
+                    black_pieces_positions.findIndex(
+                      (item) => index === item.index,
+                    )!
+                  ].x
+                  : i,
+              y:
+                black_pieces_positions.length !== 0
+                  ? black_pieces_positions[
+                    black_pieces_positions.findIndex(
+                      (item) => index === item.index,
+                    )!
+                  ].y
+                  : j,
               onSelect: SetCell,
-              onMove: SetBlack,
+              onMove: move,
             }),
           );
         }
@@ -58,18 +98,38 @@ export function Board() {
     const pieces = [];
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 3; j++) {
-        const index = i + j * board_size;
         if ((i + j) % 2 !== 0) {
+          const index = i + j * board_size;
+          console.log(index);
+
           pieces.push(
             Piece({
-              index: index,
+              index:
+                white_pieces_positions.length !== 0
+                  ? white_pieces_positions.find((item) => index === item.index)
+                    ?.index!
+                  : index,
               SelectedIndex: cellIndex,
-              type: 1,
+              type: 0,
               source: "/pieces/white piece.png",
-              x: i,
-              y: j,
+              x:
+                white_pieces_positions.length !== 0
+                  ? white_pieces_positions[
+                    white_pieces_positions.findIndex(
+                      (item) => index === item.index,
+                    )!
+                  ].x
+                  : i,
+              y:
+                white_pieces_positions.length !== 0
+                  ? white_pieces_positions[
+                    white_pieces_positions.findIndex(
+                      (item) => index === item.index,
+                    )!
+                  ].y
+                  : j,
               onSelect: SetCell,
-              onMove: SetWhite,
+              onMove: move,
             }),
           );
         }

@@ -5,8 +5,6 @@ interface CellProps {
 }
 
 export function Cell({ key, isSelected, type }: CellProps) {
-  console.log("index:", isSelected);
-
   const get_Cell_Color = (type: number) =>
     type === 1 ? "bg-white" : "bg-black";
 

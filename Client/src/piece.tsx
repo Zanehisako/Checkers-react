@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 
 interface Position {
   index: number;
-  value: number;
+  x: number;
+  y: number;
 }
 
 interface PieceProps {
@@ -13,8 +15,12 @@ interface PieceProps {
   x: number;
   y: number;
   onSelect: React.Dispatch<React.SetStateAction<number[]>>;
-  onMove: React.Dispatch<React.SetStateAction<Position[]>>;
+  onMove: (position: Position, type: number) => void;
 }
+
+const socket = io("http://192.168.1.7:3001", {
+  transports: ["websocket"],
+});
 
 export function Piece({
   index,
@@ -24,6 +30,7 @@ export function Piece({
   x,
   y,
   onSelect,
+  onMove,
 }: PieceProps) {
   const [position_x, setX] = useState(x);
   const [position_y, setY] = useState(y);
@@ -34,21 +41,33 @@ export function Piece({
     const { clientX } = event;
     setMouseX(clientX);
   };
+  useEffect(() => {
+    socket.on("update piece", (newPos: Position) => {
+      if (newPos.index === index) {
+        setX(newPos.x);
+        setY(newPos.y);
+      }
+    });
+  }, []);
 
   const handleMouseUp = (event: React.MouseEvent) => {
     const { clientX, clientY } = event;
-    console.log("mouse X:", clientX);
-    console.log("mouse Y:", clientY);
     if (clientX - mouse_x > 0) {
-      setIndex(index - 7);
-      setX(position_x + 1);
-      type === 0 ? setY(position_y - 1) : setY(position_y + 1);
+      const position = {
+        index: index,
+        x: position_x + 1,
+        y: type === 0 ? position_y - 1 : position_y + 1,
+      };
+      socket.emit("move piece", position);
+      onMove(position, type);
     } else {
-      setIndex(index - 9);
-      setX(position_x - 1);
-      type === 0 ? setY(position_y - 1) : setY(position_y + 1);
+      const position = {
+        index: index,
+        x: position_x - 1,
+        y: type === 0 ? position_y - 1 : position_y + 1,
+      };
+      socket.emit("move piece", position);
     }
-    console.log("piece index is :", index);
   };
 
   return (
