@@ -9,11 +9,60 @@ interface Position {
   y: number;
 }
 
+interface BoardProp {
+  positions: Position[];
+  cellIndex: number[];
+  SetCell: React.Dispatch<React.SetStateAction<number[]>>;
+  move: (position: Position, type: number) => void;
+}
+
 const socket = io("http://192.168.1.7:3001", {
   transports: ["websocket"],
 });
 
-export function Board() {
+export function Board({ positions, cellIndex, SetCell, move }: BoardProp) {
+  const board_size = 8;
+  const pieces = () => {
+    const pieces = [];
+    for (let i = 0; i < 8; i++) {
+      for (let j = 5; j < 8; j++) {
+        const index = i + j * board_size;
+        if ((i + j) % 2 !== 0) {
+          pieces.push(
+            Piece({
+              index:
+                positions.length !== 0
+                  ? positions.find((item) => index === item.index)?.index!
+                  : index,
+              SelectedIndex: cellIndex,
+              type: 0,
+              source: "/pieces/black piece.png",
+              x:
+                positions.length !== 0
+                  ? positions[
+                    positions.findIndex((item) => index === item.index)!
+                  ].x
+                  : i,
+              y:
+                positions.length !== 0
+                  ? positions[
+                    positions.findIndex((item) => index === item.index)!
+                  ].y
+                  : j,
+              onSelect: SetCell,
+              onMove: move,
+            }),
+          );
+        }
+      }
+    }
+
+    return pieces;
+  };
+  return pieces;
+}
+
+export function MainBoard() {
   const [black_pieces_positions, SetBlack] = useState<Position[]>([]);
   const [white_pieces_positions, SetWhite] = useState<Position[]>([]);
   const [forceRender, setForceRender] = useState(false);
@@ -51,47 +100,6 @@ export function Board() {
 
   const move = (position: Position, type: number) => {
     socket.emit("move", { position, type });
-  };
-  const black_pieces = () => {
-    const pieces = [];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 5; j < 8; j++) {
-        const index = i + j * board_size;
-        if ((i + j) % 2 !== 0) {
-          pieces.push(
-            Piece({
-              index:
-                black_pieces_positions.length !== 0
-                  ? black_pieces_positions.find((item) => index === item.index)
-                    ?.index!
-                  : index,
-              SelectedIndex: cellIndex,
-              type: 0,
-              source: "/pieces/black piece.png",
-              x:
-                black_pieces_positions.length !== 0
-                  ? black_pieces_positions[
-                    black_pieces_positions.findIndex(
-                      (item) => index === item.index,
-                    )!
-                  ].x
-                  : i,
-              y:
-                black_pieces_positions.length !== 0
-                  ? black_pieces_positions[
-                    black_pieces_positions.findIndex(
-                      (item) => index === item.index,
-                    )!
-                  ].y
-                  : j,
-              onSelect: SetCell,
-              onMove: move,
-            }),
-          );
-        }
-      }
-    }
-    return pieces;
   };
 
   const white_pieces = () => {
@@ -137,6 +145,12 @@ export function Board() {
     }
     return pieces;
   };
+  const Black_pieces = Board({
+    positions: black_pieces_positions,
+    cellIndex,
+    SetCell,
+    move,
+  });
 
   const cells = () => {
     const cells = [];
@@ -158,7 +172,7 @@ export function Board() {
   return (
     <div className="Board">
       {cells()}
-      {black_pieces()}
+      <Black_pieces />
       {white_pieces()}
     </div>
   );
