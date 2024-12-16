@@ -61,17 +61,25 @@ const logique = (pos, type) => {
       if (
         boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
-        return false;
+        if (
+          boards[1].some(
+            (position) => position.x == pos.x + 2 && position.y == pos.y - 2,
+          )
+        ) {
+          return 2;
+        } else {
+          return 0;
+        }
       } else {
-        return true;
+        return 1;
       }
     case 1:
       if (
         boards[0].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
-        return false;
+        return 0;
       } else {
-        return true;
+        return 1; //true ==1
       }
   }
 };
@@ -113,10 +121,27 @@ io.on("connection", (socket) => {
 
   socket.on("move piece", (position, type) => {
     console.log("before boards", boards);
-    if (logique(position, type)) {
+    if (logique(position, type) == 1) {
       modifyPosition(position, type);
       socket.emit("update piece", position);
       socket.broadcast.emit("update piece", position);
+    } else if (logique(position, type) == 2) {
+      const pos = {
+        index: position.index,
+        x: position.x + 1,
+        y: position.y - 1,
+      };
+      console.log("logique pos", pos);
+      modifyPosition(pos, type);
+      socket.emit("update piece", pos);
+
+      socket.emit("remove piece", pos);
+
+      socket.broadcast.emit("remove piece", pos);
+      console.log("emiting boradcast");
+      console.log("pos", pos);
+
+      socket.broadcast.emit("update piece", pos);
     }
   });
   socket.on("disconnect", () => {
