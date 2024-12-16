@@ -55,6 +55,27 @@ const initboard = () => {
 
 var boards = initboard();
 
+const logique = (pos, type) => {
+  switch (type) {
+    case 0:
+      if (
+        boards[1].some((position) => position.x == pos.x && position.y == pos.y)
+      ) {
+        return false;
+      } else {
+        return true;
+      }
+    case 1:
+      if (
+        boards[0].some((position) => position.x == pos.x && position.y == pos.y)
+      ) {
+        return false;
+      } else {
+        return true;
+      }
+  }
+};
+
 const modifyPosition = (newPosition, type) => {
   console.log("newPosition:", newPosition);
   console.log("newPosition.index:", newPosition.index);
@@ -92,10 +113,11 @@ io.on("connection", (socket) => {
 
   socket.on("move piece", (position, type) => {
     console.log("before boards", boards);
-    modifyPosition(position, type);
-    console.log("after boards", boards);
-    socket.emit("update piece", position);
-    socket.broadcast.emit("update piece", position);
+    if (logique(position, type)) {
+      modifyPosition(position, type);
+      socket.emit("update piece", position);
+      socket.broadcast.emit("update piece", position);
+    }
   });
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
