@@ -18,7 +18,7 @@ interface PieceProps {
   onMove: (position: Position, type: number) => void;
 }
 
-const socket = io("http://192.168.1.7:3001", {
+const socket = io("http://localhost:3001", {
   transports: ["websocket"],
 });
 
@@ -58,14 +58,14 @@ export function Piece({
         x: position_x + 1,
         y: type === 0 ? position_y - 1 : position_y + 1,
       };
-      socket.emit("move piece", position);
+      socket.emit("move piece", position, type);
     } else {
       const position = {
         index: index,
         x: position_x - 1,
         y: type === 0 ? position_y - 1 : position_y + 1,
       };
-      socket.emit("move piece", position);
+      socket.emit("move piece", position, type);
     }
   };
 

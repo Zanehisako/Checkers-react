@@ -16,7 +16,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://192.168.1.7:3001",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });
@@ -55,25 +55,27 @@ const initboard = () => {
 
 var boards = initboard();
 
-const modifyPosition = (newPosition) => {
+const modifyPosition = (newPosition, type) => {
   console.log("newPosition:", newPosition);
-  console.log("newPosition.index:", newPosition.position.index);
-  switch (newPosition.type) {
+  console.log("newPosition.index:", newPosition.index);
+  console.log("type", type);
+  switch (type) {
     case 0:
       const index_black = boards[0].findIndex(
-        (item) => item.index === newPosition.position.index,
+        (item) => item.index === newPosition.index,
       );
-      boards[0][index] = newPosition.position;
+      boards[0][index_black] = newPosition;
+      console.log("new position", boards[0][index_black]);
 
-      return boards;
+      break;
 
     case 1:
       const index_white = boards[1].findIndex(
-        (item) => item.index === newPosition.position.index,
+        (item) => item.index === newPosition.index,
       );
 
-      boards[1][index_white] = newPosition.position;
-      return boards;
+      boards[1][index_white] = newPosition;
+      break;
   }
 };
 
@@ -82,11 +84,16 @@ io.on("connection", (socket) => {
 
   socket.emit("init", boards);
   socket.on("move", (position) => {
-    boards = modifyPosition(position);
+    console.log("boards before ", boards);
+
+    console.log("boards after", boards);
     socket.emit("update", boards);
   });
 
-  socket.on("move piece", (position) => {
+  socket.on("move piece", (position, type) => {
+    console.log("before boards", boards);
+    modifyPosition(position, type);
+    console.log("after boards", boards);
     socket.emit("update piece", position);
     socket.broadcast.emit("update piece", position);
   });

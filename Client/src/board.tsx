@@ -21,7 +21,7 @@ interface BoardProp {
   move: (position: Position, type: number) => void;
 }
 
-const socket = io("http://192.168.1.7:3001", {
+const socket = io("http://localhost:3001", {
   transports: ["websocket"],
 });
 
@@ -37,6 +37,11 @@ export function Board({
     console.log("init");
 
     socket.on("init", (boards: Position[][]) => {
+      type === types.White
+        ? console.log("white init")
+        : console.log("black init");
+      console.log("boards", boards);
+      console.log("positions_state", positions_state);
       positions_state === boards[0] || boards[1]
         ? console.log("the same")
         : console.log("not the same should rerender");
@@ -53,7 +58,7 @@ export function Board({
         Piece({
           index: positions_state[index].index,
           SelectedIndex: cellIndex,
-          type: 0,
+          type: type === types.Black ? 0 : 1,
           source:
             type == types.Black
               ? "/pieces/black piece.png"
