@@ -116,6 +116,19 @@ export function MainBoard() {
     socket.emit("move", { position, type });
   };
 
+  useEffect(() => {
+    socket.on("remove piece", (position, type) => {
+      switch (type) {
+        case 0:
+          const index: number = Black_pieces().findIndex((item) => item.props);
+          break;
+
+        default:
+          break;
+      }
+    });
+  }, []);
+
   const Black_pieces = Board({
     type: types.Black,
     positions: init(0)!,
