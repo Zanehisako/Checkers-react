@@ -4,7 +4,7 @@ const http = require("http"); // Import Node's HTTP module
 const { Server } = require("socket.io"); // Import Socket.IO Server class
 const { log } = require("console");
 
-const PORT = 3001;
+const PORT = 3000;
 
 const app = express();
 
@@ -143,6 +143,10 @@ io.on("connection", (socket) => {
 
       socket.broadcast.emit("update piece", pos);
     }
+  });
+
+  socket.on("message", (msg) => {
+    console.log(msg);
   });
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
