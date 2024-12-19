@@ -9,6 +9,14 @@ interface Position {
   y: number;
 }
 
+enum Moves {
+  None,
+  MoveToEmptySpot,
+  EatRight,
+  EatLeft,
+  Upgrade,
+}
+
 const PORT = 3001;
 
 const app = express();
@@ -69,20 +77,26 @@ const logique = (pos: Position, type: number) => {
             (position) => position.x == pos.x + 2 && position.y == pos.y - 2,
           )
         ) {
-          return 2;
-        } else {
-          return 0;
+          return Moves.EatRight;
+        }
+        if (
+          boards[1].some(
+            (position) => position.x == pos.x - 2 && position.y == pos.y - 2,
+          )
+        ) {
+          return Moves.EatLeft;
         }
       } else {
-        return 1;
+        return Moves.MoveToEmptySpot;
       }
     case 1:
+      //this checks the spot is empty
       if (
         boards[0].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
-        return 0;
+        return Moves.None;
       } else {
-        return 1; //true ==1
+        return Moves.MoveToEmptySpot;
       }
   }
 };
