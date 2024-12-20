@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { Piece } from "./piece";
 import { Cell } from "./cell";
 import io from "socket.io-client";
@@ -33,6 +33,7 @@ export function Board({
   move,
 }: BoardProp) {
   const [positions_state, SetPosition] = useState<Position[]>(positions);
+  const [pieces, SetPieces] = useState<JSX.Element[]>([]);
   useEffect(() => {
     console.log("init");
 
@@ -47,31 +48,46 @@ export function Board({
         : console.log("not the same should rerender");
       SetPosition(type == types.Black ? boards[0] : boards[1]);
       console.log("finished set board");
+
+      const new_pieces = () => {
+        var pieces = [];
+        for (let index = 0; index < positions_state.length; index++) {
+          pieces.push(
+            <Piece
+              key={index}
+              SelectedIndex={cellIndex}
+              type={type === types.Black ? 0 : 1}
+              source={
+                type == types.Black
+                  ? "/pieces/black piece.png"
+                  : "/pieces/white piece.png"
+              }
+              index={positions_state[index].index}
+              x={positions_state[index].x}
+              y={positions_state[index].y}
+              onMove={move}
+              onSelect={SetCell}
+            />,
+          );
+        }
+        return pieces;
+      };
+
+      SetPieces(new_pieces);
+    });
+
+    socket.on("remove piece", (position: Position, type: number) => {
+      console.log("remove piece from ", type);
+      SetPieces((prev) => {
+        console.log("pieces length before ", prev.length);
+        prev.pop();
+        console.log("pieces length after", prev.length);
+        return prev;
+      });
     });
   }, []);
   console.log("positions_state", positions_state);
 
-  const pieces = () => {
-    var pieces = [];
-    for (let index = 0; index < positions_state.length; index++) {
-      pieces.push(
-        Piece({
-          index: positions_state[index].index,
-          SelectedIndex: cellIndex,
-          type: type === types.Black ? 0 : 1,
-          source:
-            type == types.Black
-              ? "/pieces/black piece.png"
-              : "/pieces/white piece.png",
-          x: positions_state[index].x,
-          y: positions_state[index].y,
-          onSelect: SetCell,
-          onMove: move,
-        }),
-      );
-    }
-    return pieces;
-  };
   return pieces;
 }
 
@@ -120,7 +136,10 @@ export function MainBoard() {
     socket.on("remove piece", (position, type) => {
       switch (type) {
         case 0:
-          const index: number = Black_pieces().findIndex((item) => item.props);
+          console.log("Black_pieces", Black_pieces.length);
+          break;
+        case 1:
+          console.log("Black_pieces", Black_pieces.length);
           break;
 
         default:
@@ -165,8 +184,8 @@ export function MainBoard() {
   return (
     <div className="Board">
       {cells()}
-      <Black_pieces />
-      <White_pieces />
+      {Black_pieces}
+      {White_pieces}
     </div>
   );
 }

@@ -131,11 +131,14 @@ io.on("connection", (socket) => {
   socket.emit("init", boards);
   socket.on("move piece", (position: Position, type: number) => {
     console.log("before boards", boards);
-    if (logique(position, type) == 1) {
+    if (logique(position, type) == Moves.MoveToEmptySpot) {
+      socket.emit("remove piece", position, type);
+      socket.broadcast.emit("remove piece", position, type);
       modifyPosition(position, type);
       socket.emit("update piece", position);
       socket.broadcast.emit("update piece", position);
-    } else if (logique(position, type) == 2) {
+    } else if (logique(position, type) == Moves.EatRight) {
+      socket.emit("remove piece", position, type);
       modifyPosition(position, type);
       socket.emit("update piece", {
         index: position.index,

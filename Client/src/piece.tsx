@@ -7,6 +7,14 @@ interface Position {
   y: number;
 }
 
+enum Moves {
+  None,
+  MoveToEmptySpot,
+  EatRight,
+  EatLeft,
+  Upgrade,
+}
+
 interface PieceProps {
   index: number;
   SelectedIndex: number[];
