@@ -67,26 +67,40 @@ const initboard = () => {
 var boards = initboard();
 
 const logique = (pos: Position, type: number) => {
+  console.log("position ", pos);
   switch (type) {
     case 0:
+      console.log("boards[0] posti", boards[0]);
+      console.log("boards[1] posti", boards[1]);
       if (
         boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
         if (
-          boards[1].some(
-            (position) => position.x == pos.x + 2 && position.y == pos.y - 2,
+          !boards[1].some(
+            (position) => position.x == pos.x + 1 && position.y == pos.y - 1,
           )
         ) {
+          console.log("Moves.EatRight");
           return Moves.EatRight;
         }
         if (
-          boards[1].some(
-            (position) => position.x == pos.x - 2 && position.y == pos.y - 2,
+          !boards[1].some(
+            (position) => position.x == pos.x - 1 && position.y == pos.y - 1,
           )
         ) {
+          console.log("Moves.EatLeft");
           return Moves.EatLeft;
         }
+        if (
+          boards[1].some(
+            (position) => position.x == pos.x + 1 && position.y == pos.y - 1,
+          )
+        ) {
+          console.log("Moves.None");
+          return Moves.None;
+        }
       } else {
+        console.log("Moves.MoveToEmptySpot");
         return Moves.MoveToEmptySpot;
       }
     case 1:
@@ -94,24 +108,46 @@ const logique = (pos: Position, type: number) => {
       if (
         boards[0].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
-        return Moves.None;
+        //this checks for the spot behind if its is empty or not
+        if (
+          !boards[0].some(
+            (position) => position.x == pos.x + 1 && position.y == pos.y + 1,
+          )
+        ) {
+          console.log("Moves.EatRight");
+          return Moves.EatRight;
+        }
+        if (
+          !boards[0].some(
+            (position) => position.x == pos.x - 1 && position.y == pos.y + 1,
+          )
+        ) {
+          console.log("Moves.EatLeft");
+          return Moves.EatLeft;
+        }
+        if (
+          boards[0].some(
+            (position) => position.x == pos.x + 1 && position.y == pos.y + 1,
+          )
+        ) {
+          console.log("Moves.None");
+          return Moves.None;
+        }
       } else {
+        console.log("Moves.MoveToEmptySpot");
         return Moves.MoveToEmptySpot;
       }
   }
 };
 
 const modifyPosition = (newPosition: Position, type: number) => {
-  console.log("newPosition:", newPosition);
-  console.log("newPosition.index:", newPosition.index);
-  console.log("type", type);
   switch (type) {
     case 0:
       const index_black = boards[0].findIndex(
         (item) => item.index === newPosition.index,
       );
+
       boards[0][index_black] = newPosition;
-      console.log("new position", boards[0][index_black]);
 
       break;
 
@@ -130,25 +166,39 @@ io.on("connection", (socket) => {
 
   socket.emit("init", boards);
   socket.on("move piece", (position: Position, type: number) => {
-    console.log("before boards", boards);
-    if (logique(position, type) == Moves.MoveToEmptySpot) {
-      socket.emit("remove piece", position, type);
-      socket.broadcast.emit("remove piece", position, type);
+    console.log("boards black posti", boards[0]);
+    console.log("boards white posti", boards[1]);
+    if (logique(position, type) === Moves.MoveToEmptySpot) {
       modifyPosition(position, type);
       socket.emit("update piece", position);
       socket.broadcast.emit("update piece", position);
+
+      console.log("boards black posti", boards[0]);
     } else if (logique(position, type) == Moves.EatRight) {
       socket.emit("remove piece", position, type);
       modifyPosition(position, type);
       socket.emit("update piece", {
         index: position.index,
         x: position.x + 1,
-        y: position.y - 1,
+        y: type === 0 ? position.y - 1 : position.y + 1,
       });
       socket.broadcast.emit("update piece", {
         index: position.index,
         x: position.x + 1,
-        y: position.y - 1,
+        y: type === 0 ? position.y - 1 : position.y + 1,
+      });
+    } else if (logique(position, type) == Moves.EatLeft) {
+      socket.emit("remove piece", position, type);
+      modifyPosition(position, type);
+      socket.emit("update piece", {
+        index: position.index,
+        x: position.x - 1,
+        y: type === 0 ? position.y - 1 : position.y + 1,
+      });
+      socket.broadcast.emit("update piece", {
+        index: position.index,
+        x: position.x - 1,
+        y: type === 0 ? position.y - 1 : position.y + 1,
       });
     }
   });
