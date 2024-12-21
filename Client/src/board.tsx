@@ -33,7 +33,29 @@ export function Board({
   move,
 }: BoardProp) {
   const [positions_state, SetPosition] = useState<Position[]>(positions);
-  const [pieces, SetPieces] = useState<JSX.Element[]>([]);
+  const [pieces, SetPieces] = useState<JSX.Element[]>(() => {
+    var pieces: JSX.Element[] = [];
+    for (let index = 0; index < positions_state.length; index++) {
+      pieces.push(
+        <Piece
+          key={index}
+          SelectedIndex={cellIndex}
+          type={type === types.Black ? 0 : 1}
+          source={
+            type == types.Black
+              ? "/pieces/black piece.png"
+              : "/pieces/white piece.png"
+          }
+          index={positions_state[index].index}
+          x={positions_state[index].x}
+          y={positions_state[index].y}
+          onMove={move}
+          onSelect={SetCell}
+        />,
+      );
+    }
+    return pieces;
+  });
   useEffect(() => {
     console.log("init");
 
@@ -48,43 +70,24 @@ export function Board({
         : console.log("not the same should rerender");
       SetPosition(type == types.Black ? boards[0] : boards[1]);
       console.log("finished set board");
-
-      const new_pieces = () => {
-        var pieces = [];
-        for (let index = 0; index < positions_state.length; index++) {
-          pieces.push(
-            <Piece
-              key={index}
-              SelectedIndex={cellIndex}
-              type={type === types.Black ? 0 : 1}
-              source={
-                type == types.Black
-                  ? "/pieces/black piece.png"
-                  : "/pieces/white piece.png"
-              }
-              index={positions_state[index].index}
-              x={positions_state[index].x}
-              y={positions_state[index].y}
-              onMove={move}
-              onSelect={SetCell}
-            />,
-          );
-        }
-        return pieces;
-      };
-
-      SetPieces(new_pieces);
     });
 
     socket.on("remove piece", (position: Position, type: number) => {
       console.log("remove piece from ", type);
       SetPieces((prev) => {
         console.log("pieces length before ", prev.length);
-        prev.pop();
+
+        var new_Pieces = prev.slice(0, -1);
         console.log("pieces length after", prev.length);
-        return prev;
+        console.log("removed type", type);
+        return new_Pieces!;
       });
+      console.log(pieces.length);
     });
+    return () => {
+      socket.off("init");
+      socket.off("remove piece");
+    };
   }, []);
   console.log("positions_state", positions_state);
 
