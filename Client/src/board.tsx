@@ -72,17 +72,57 @@ export function Board({
       console.log("finished set board");
     });
 
-    socket.on("remove piece", (position: Position, type: number) => {
-      console.log("remove piece from ", type);
+    socket.on("update piece", (position: Position) => {
       SetPieces((prev) => {
-        console.log("pieces length before ", prev.length);
-
-        var new_Pieces = prev.slice(0, -1);
+        const index = prev.findIndex(
+          (item) => item.props.index === position.index,
+        );
+        console.log("index", index);
+        const new_Pieces = prev.map((item) => {
+          if (item.props.index === position.index) {
+            // Update the properties directly
+            return {
+              ...item,
+              props: {
+                ...item.props,
+                x: position.x,
+                y: position.y,
+              },
+            };
+          }
+          // Return the unchanged item if the condition is not met
+          return item;
+        });
         console.log("pieces length after", prev.length);
         console.log("removed type", type);
         return new_Pieces!;
       });
       console.log(pieces.length);
+    });
+    socket.on("remove piece", (position: Position, type_f: number) => {
+      if (type == type_f) {
+        console.log("type ", type);
+        console.log("type_f ", type_f);
+        console.log("x", position.x);
+
+        console.log("remove piece from ", type);
+        SetPieces((prev) => {
+          console.log("pieces length before ", prev.length);
+          prev.map((item) => console.log("x,y:", item.props.x, item.props.y));
+          const index = prev.findIndex(
+            (item) =>
+              item.props.x === position.x && item.props.y === position.y,
+          );
+          console.log("index", index);
+          const new_Pieces = prev.filter(
+            (_, index_prev) => index !== index_prev,
+          );
+          console.log("pieces length after", prev.length);
+          console.log("removed type", type);
+          return new_Pieces!;
+        });
+        console.log(pieces.length);
+      }
     });
     return () => {
       socket.off("init");
@@ -134,22 +174,6 @@ export function MainBoard() {
   const move = (position: Position, type: number) => {
     socket.emit("move", { position, type });
   };
-
-  useEffect(() => {
-    socket.on("remove piece", (position, type) => {
-      switch (type) {
-        case 0:
-          console.log("Black_pieces", Black_pieces.length);
-          break;
-        case 1:
-          console.log("Black_pieces", Black_pieces.length);
-          break;
-
-        default:
-          break;
-      }
-    });
-  }, []);
 
   const Black_pieces = Board({
     type: types.Black,

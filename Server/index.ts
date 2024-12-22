@@ -175,7 +175,8 @@ io.on("connection", (socket) => {
 
       console.log("boards black posti", boards[0]);
     } else if (logique(position, type) == Moves.EatRight) {
-      socket.emit("remove piece", position, type);
+      socket.emit("remove piece", position, type == 1 ? 0 : 1);
+      socket.broadcast.emit("remove piece", position, type == 1 ? 0 : 1);
       modifyPosition(position, type);
       socket.emit("update piece", {
         index: position.index,
@@ -188,7 +189,8 @@ io.on("connection", (socket) => {
         y: type === 0 ? position.y - 1 : position.y + 1,
       });
     } else if (logique(position, type) == Moves.EatLeft) {
-      socket.emit("remove piece", position, type);
+      socket.emit("remove piece", position, type == 1 ? 1 : 0);
+      socket.broadcast.emit("remove piece", position, type == 1 ? 1 : 0);
       modifyPosition(position, type);
       socket.emit("update piece", {
         index: position.index,
