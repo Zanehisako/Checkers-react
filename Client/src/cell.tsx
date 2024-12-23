@@ -6,7 +6,7 @@ interface CellProps {
 
 export function Cell({ key, isSelected, type }: CellProps) {
   const get_Cell_Color = (type: number) =>
-    type === 1 ? "bg-white" : "bg-black";
+    type === 1 ? "bg-white" : "bg-orange-900";
 
   return (
     <div
