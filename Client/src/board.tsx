@@ -100,7 +100,7 @@ export function Board({
       console.log(pieces.length);
     });
     socket.on("remove piece", (position: Position, type_f: number) => {
-      if (type == type_f) {
+      if (type === type_f) {
         console.log("type ", type);
         console.log("type_f ", type_f);
         console.log("x", position.x);
@@ -108,7 +108,6 @@ export function Board({
         console.log("remove piece from ", type);
         SetPieces((prev) => {
           console.log("pieces length before ", prev.length);
-          prev.map((item) => console.log("x,y:", item.props.x, item.props.y));
           const index = prev.findIndex(
             (item) =>
               item.props.x === position.x && item.props.y === position.y,
