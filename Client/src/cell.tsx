@@ -13,8 +13,8 @@ export function Cell({ key, isSelected, type }: CellProps) {
       key={key}
       className={
         isSelected[0] === key || isSelected[1] === key
-          ? `w-12 h-12 ${get_Cell_Color(type)} border-2 border-red-500`
-          : `w-12 h-12 ${get_Cell_Color(type)}`
+          ? `w-16 h-16 ${get_Cell_Color(type)} border-2 border-red-500`
+          : `w-16 h-16 ${get_Cell_Color(type)}`
       }
     ></div>
   );

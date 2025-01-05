@@ -86,8 +86,8 @@ export function Piece({
       height={36}
       className="absolute w4 h4 cursor-pointer hover:scale-10 transition-transform duration-200"
       style={{
-        width: 45,
-        transform: `translate(${position_x * 48}px,${position_y * 48}px)`, //this is the position of the piece
+        width: 64,
+        transform: `translate(${position_x * 64}px,${position_y * 64}px)`, //this is the position of the piece
       }}
       alt="piece"
       onClick={() =>

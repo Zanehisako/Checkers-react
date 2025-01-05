@@ -72,6 +72,7 @@ const logique = (pos: Position, type: number) => {
       console.log("position white", pos);
       console.log("boards[0] posti", boards[0]);
       console.log("boards[1] posti", boards[1]);
+
       if (
         boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
