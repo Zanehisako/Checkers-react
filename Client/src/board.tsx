@@ -208,7 +208,7 @@ export function MainBoard() {
   };
 
   return (
-    <div className="Board">
+    <div className="grid grid-cols-8 w-128 h-128 relative">
       {cells()}
       {Black_pieces}
       {White_pieces}

@@ -84,7 +84,7 @@ export function Piece({
       src={source}
       width={36}
       height={36}
-      className="absolute w4 h4 cursor-pointer hover:scale-10 transition-transform duration-200"
+      className="absolute cursor-pointer hover:scale-10 transition-transform duration-200 "
       style={{
         width: 64,
         transform: `translate(${position_x * 64}px,${position_y * 64}px)`, //this is the position of the piece
