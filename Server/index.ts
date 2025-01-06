@@ -72,6 +72,8 @@ const logique = (pos: Position, type: number) => {
       console.log("position white", pos);
       console.log("boards[0] posti", boards[0]);
       console.log("boards[1] posti", boards[1]);
+      var old_position = boards[0][boards[0].findIndex((pos_a) => pos_a.index === pos.index)];
+      const direction = old_position.x - pos.y;
 
       if (
         boards[1].some((position) => position.x == pos.x && position.y == pos.y)
@@ -79,7 +81,7 @@ const logique = (pos: Position, type: number) => {
         if (
           !boards[1].some(
             (position) => position.x == pos.x + 1 && position.y == pos.y - 1,
-          )
+          ) && (direction >= 0)
         ) {
           console.log("boards[0] posti", boards[0]);
           console.log("boards[1] posti", boards[1]);
@@ -90,6 +92,7 @@ const logique = (pos: Position, type: number) => {
           !boards[1].some(
             (position) => position.x == pos.x - 1 && position.y == pos.y - 1,
           )
+          && (direction < 0)
         ) {
           console.log("boards[0] posti", boards[0]);
           console.log("boards[1] posti", boards[1]);
