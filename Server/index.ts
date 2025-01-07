@@ -72,47 +72,22 @@ const logique = (pos: Position, type: number) => {
       console.log("position white", pos);
       console.log("boards[0] posti", boards[0]);
       console.log("boards[1] posti", boards[1]);
-      var old_position = boards[0][boards[0].findIndex((pos_a) => pos_a.index === pos.index)];
-      const direction = old_position.x - pos.y;
 
       if (
-        boards[1].some((position) => position.x == pos.x && position.y == pos.y)
+        !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
         if (
-          !boards[1].some(
-            (position) => position.x == pos.x + 1 && position.y == pos.y - 1,
-          ) && (direction >= 0)
+          boards[1].some((position) => position.x - 1 === pos.x && position.y + 1 === pos.y)
         ) {
-          console.log("boards[0] posti", boards[0]);
-          console.log("boards[1] posti", boards[1]);
-          console.log("black Moves.EatRight");
+          console.log("EatRight");
           return Moves.EatRight;
         }
-        if (
-          !boards[1].some(
-            (position) => position.x == pos.x - 1 && position.y == pos.y - 1,
-          )
-          && (direction < 0)
+        else if (
+          boards[1].some((position) => position.x + 1 === pos.x && position.y + 1 === pos.y)
         ) {
-          console.log("boards[0] posti", boards[0]);
-          console.log("boards[1] posti", boards[1]);
-          console.log("black Moves.EatLeft");
+          console.log("EatLeft");
           return Moves.EatLeft;
         }
-        if (
-          boards[1].some(
-            (position) => position.x == pos.x + 1 && position.y == pos.y - 1,
-          )
-        ) {
-          console.log("boards[0] posti", boards[0]);
-          console.log("boards[1] posti", boards[1]);
-          console.log("black Moves.None");
-          return Moves.None;
-        }
-      } else {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
-        console.log("black Moves.MoveToEmptySpot");
         return Moves.MoveToEmptySpot;
       }
     case 1:
@@ -186,14 +161,15 @@ io.on("connection", (socket) => {
       io.emit("update piece", position);
       console.log("boards black posti", boards[0]);
     } else if (logique(position, type) == Moves.EatRight) {
-      modifyPosition(
+      modifyPosition(position, type)
+      /*modifyPosition(
         {
           ...position,
           x: position.x + 1,
           y: type == 1 ? position.y + 1 : position.y - 1,
         },
         type,
-      );
+      );*/
       console.log("piece to be removed:", position.index);
       io.emit("remove piece", position, type == 1 ? 0 : 1);
       io.emit("update piece", {
@@ -202,14 +178,15 @@ io.on("connection", (socket) => {
         y: type === 0 ? position.y - 1 : position.y + 1,
       });
     } else if (logique(position, type) == Moves.EatLeft) {
-      modifyPosition(
+      modifyPosition(position, type)
+      /*modifyPosition(
         {
           ...position,
           x: position.x - 1,
           y: type == 1 ? position.y + 1 : position.y - 1,
         },
         type,
-      );
+      );*/
       console.log("piece to be removed:", position.index);
       io.emit("remove piece", position, type == 1 ? 0 : 1);
       io.emit("update piece", {
