@@ -72,12 +72,11 @@ const logique = (pos: Position, type: number) => {
       console.log("position white", pos);
       console.log("boards[0] posti", boards[0]);
       console.log("boards[1] posti", boards[1]);
-
       if (
         !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
         if (
-          boards[1].some((position) => position.x - 1 === pos.x && position.y + 1 === pos.y)
+          boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
         ) {
           console.log("EatRight");
           return Moves.EatRight;
@@ -87,8 +86,10 @@ const logique = (pos: Position, type: number) => {
         ) {
           console.log("EatLeft");
           return Moves.EatLeft;
+        } else {
+          return Moves.MoveToEmptySpot;
         }
-        return Moves.MoveToEmptySpot;
+
       }
     case 1:
       const current_index = boards[1].findIndex(
@@ -156,44 +157,27 @@ io.on("connection", (socket) => {
   socket.on("move piece", (position: Position, type: number) => {
     console.log("boards black posti", boards[0]);
     console.log("boards white posti", boards[1]);
-    if (logique(position, type) === Moves.MoveToEmptySpot) {
-      modifyPosition(position, type);
-      io.emit("update piece", position);
-      console.log("boards black posti", boards[0]);
-    } else if (logique(position, type) == Moves.EatRight) {
-      modifyPosition(position, type)
-      /*modifyPosition(
-        {
-          ...position,
-          x: position.x + 1,
-          y: type == 1 ? position.y + 1 : position.y - 1,
-        },
-        type,
-      );*/
-      console.log("piece to be removed:", position.index);
-      io.emit("remove piece", position, type == 1 ? 0 : 1);
-      io.emit("update piece", {
-        index: position.index,
-        x: position.x + 1,
-        y: type === 0 ? position.y - 1 : position.y + 1,
-      });
-    } else if (logique(position, type) == Moves.EatLeft) {
-      modifyPosition(position, type)
-      /*modifyPosition(
-        {
-          ...position,
-          x: position.x - 1,
-          y: type == 1 ? position.y + 1 : position.y - 1,
-        },
-        type,
-      );*/
-      console.log("piece to be removed:", position.index);
-      io.emit("remove piece", position, type == 1 ? 0 : 1);
-      io.emit("update piece", {
-        index: position.index,
-        x: position.x - 1,
-        y: type === 0 ? position.y - 1 : position.y + 1,
-      });
+    const result = logique(position, type);
+    switch (result) {
+      case Moves.MoveToEmptySpot:
+        modifyPosition(position, type);
+        io.emit("update piece", position);
+        console.log("boards black posti", boards[0]);
+        break;
+      case Moves.EatRight:
+        modifyPosition(position, type);
+        io.emit("update piece", position);
+        io.emit("remove piece", { ...position, x: position.x - 1, y: position.y + 1 }, type == 1 ? 0 : 1)
+        console.log("boards black posti", boards[0]);
+        break;
+      case Moves.EatLeft:
+        modifyPosition(position, type);
+        io.emit("update piece", position);
+        io.emit("remove piece", { ...position, x: position.x + 1, y: position.y + 1 }, type == 1 ? 0 : 1)
+        console.log("boards black posti", boards[0]);
+        break;
+      default:
+        break;
     }
   });
   socket.on("disconnect", () => {
