@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { useSocket } from "./socketcontext";
 
-interface Position {
-  index: number;
-  x: number;
-  y: number;
-}
 
 enum Moves {
   None,
@@ -26,9 +22,6 @@ interface PieceProps {
   onMove: (position: Position, type: number) => void;
 }
 
-const socket = io("http://localhost:3001", {
-  transports: ["websocket"],
-});
 
 export function Piece({
   index,
@@ -40,6 +33,7 @@ export function Piece({
   onSelect,
   onMove,
 }: PieceProps) {
+  const socket = useSocket();
   const [position_x, setX] = useState(x);
   const [position_y, setY] = useState(y);
   const [mouse_x, setMouseX] = useState(0);

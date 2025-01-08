@@ -2,6 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { Piece } from "./piece";
 import { Cell } from "./cell";
 import io from "socket.io-client";
+import { useSocket } from "./socketcontext";
 
 interface Position {
   index: number;
@@ -21,10 +22,6 @@ interface BoardProp {
   move: (position: Position, type: number) => void;
 }
 
-const socket = io("http://localhost:3001", {
-  transports: ["websocket"],
-});
-
 export function Board({
   type,
   positions,
@@ -32,6 +29,8 @@ export function Board({
   SetCell,
   move,
 }: BoardProp) {
+
+  const socket = useSocket();
   const [positions_state, SetPosition] = useState<Position[]>(positions);
   const [pieces, SetPieces] = useState<JSX.Element[]>(() => {
     var pieces: JSX.Element[] = [];
@@ -170,6 +169,7 @@ export function MainBoard() {
   const [cellIndex, SetCell] = useState([0, 0]);
   const board_size = 8;
 
+  const socket = useSocket()
   const move = (position: Position, type: number) => {
     socket.emit("move", { position, type });
   };

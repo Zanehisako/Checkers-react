@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import Client from "./client";
 import { Board } from "./board";
+import { SocketProvider } from "./socketcontext";
 
 const root = ReactDOM.createRoot(document.getElementById("root")!);
 root.render(
