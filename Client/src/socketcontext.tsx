@@ -5,9 +5,10 @@ import { Socket, io } from 'socket.io-client';
 // Create the socket instance
 const socket: Socket = io("http://localhost:3001", {
   transports: ["websocket"],
+  autoConnect: true,
   reconnection: true,
   reconnectionDelay: 5000,
-  reconnectionAttempts: 5
+  reconnectionAttempts: 5,
 });
 
 const SocketContext = createContext<Socket>(socket);
