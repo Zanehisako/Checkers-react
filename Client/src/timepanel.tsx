@@ -2,7 +2,11 @@ import { useEffect, useState } from "react"
 import { io } from "socket.io-client"
 import { useSocket } from "./socketcontext";
 
-export function TimePanel() {
+interface timepanelProp {
+  piece_type: number
+}
+
+export function TimePanel({ piece_type }: timepanelProp) {
   const [messages, setMessages] = useState<string[]>([]);
   const [time, setTime] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -41,9 +45,11 @@ export function TimePanel() {
 
     console.log('Registering move piece handler - socket is connected');
 
-    const handleMovePiece = (position: Position) => {
+    const handleMovePiece = (position: Position, type: number) => {
       console.log('Received move piece event:', position);
-      setMessages(prevMessages => [...prevMessages, JSON.stringify(position)]);
+      if (piece_type === type) {
+        setMessages(prevMessages => [...prevMessages, JSON.stringify(position)]);
+      }
     };
 
     socket.on("update piece", handleMovePiece);
@@ -56,7 +62,6 @@ export function TimePanel() {
   return (
     <div className="bg-gray-900 flex flex-col">
       <div className="flex flex-col">
-        {/* Connection status indicator */}
         <div className={`px-2 py-1 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}>
           {isConnected ? 'Connected' : 'Disconnected'}
         </div>

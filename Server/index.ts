@@ -75,6 +75,7 @@ const logique = (pos: Position, type: number) => {
       if (
         !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
+        console.log("spot is empty");
         if (
           boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
         ) {
@@ -91,33 +92,37 @@ const logique = (pos: Position, type: number) => {
         }
 
       }
+      else {
+        console.log("YOU SHALL NOT PASS!!")
+        return Moves.None;
+      }
     case 1:
-      const current_index = boards[1].findIndex(
-        (position) => position.index === pos.index,
-      );
       console.log("position white", pos);
-      //this checks the spot is empty
+      console.log("boards[0] posti", boards[0]);
+      console.log("boards[1] posti", boards[1]);
       if (
-        boards[0].some((position) => position.x == pos.x && position.y == pos.y)
+        !boards[0].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
-        //this checks for the spot behind if its is empty or not
-        switch (pos.x - boards[1][current_index].x) {
-          case +1:
-            console.log("black boards[0] posti", boards[0]);
-            console.log("white boards[1] posti", boards[1]);
-            console.log("white Moves.EatRight");
-            return Moves.EatRight;
-          case -1:
-            console.log("boards[0] posti", boards[0]);
-            console.log("boards[1] posti", boards[1]);
-            console.log("white Moves.EatLeft");
-            return Moves.EatLeft;
+        console.log("spot is empty");
+        if (
+          boards[0].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)
+        ) {
+          console.log("EatRight");
+          return Moves.EatRight;
         }
-      } else {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
-        console.log("white Moves.MoveToEmptySpot");
-        return Moves.MoveToEmptySpot;
+        else if (
+          boards[0].some((position) => position.x + 1 === pos.x && position.y - 1 === pos.y)
+        ) {
+          console.log("EatLeft");
+          return Moves.EatLeft;
+        } else {
+          return Moves.MoveToEmptySpot;
+        }
+
+      }
+      else {
+        console.log("YOU SHALL NOT PASS!!")
+        return Moves.None;
       }
   }
 };
@@ -146,6 +151,7 @@ const modifyPosition = (newPosition: Position, type: number) => {
       console.log("new white board :", boards[1]);
       break;
   }
+
 };
 
 io.on("connection", (socket) => {
@@ -161,18 +167,18 @@ io.on("connection", (socket) => {
     switch (result) {
       case Moves.MoveToEmptySpot:
         modifyPosition(position, type);
-        io.emit("update piece", position);
+        io.emit("update piece", position, type);
         console.log("boards black posti", boards[0]);
         break;
       case Moves.EatRight:
         modifyPosition(position, type);
-        io.emit("update piece", position);
+        io.emit("update piece", position, type);
         io.emit("remove piece", { ...position, x: position.x - 1, y: position.y + 1 }, type == 1 ? 0 : 1)
         console.log("boards black posti", boards[0]);
         break;
       case Moves.EatLeft:
         modifyPosition(position, type);
-        io.emit("update piece", position);
+        io.emit("update piece", position, type);
         io.emit("remove piece", { ...position, x: position.x + 1, y: position.y + 1 }, type == 1 ? 0 : 1)
         console.log("boards black posti", boards[0]);
         break;

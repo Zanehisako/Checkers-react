@@ -9,9 +9,9 @@ function Client() {
     <SocketProvider>
       <div className="bg-gray-900 h-screen w-screen">
         <div className="flex flex-row h-screen w-screen justify-around items-center" >
-          <TimePanel />
+          <TimePanel piece_type={1} />
           <MainBoard />
-          <TimePanel />
+          <TimePanel piece_type={0} />
         </div>
       </div >
     </SocketProvider>
