@@ -161,6 +161,7 @@ io.on("connection", (socket) => {
 
   socket.emit("init", boards);
   socket.on("move piece", (position: Position, type: number,time:number) => {
+    console.log("time", time);
     console.log("boards black posti", boards[0]);
     console.log("boards white posti", boards[1]);
     const result = logique(position, type);

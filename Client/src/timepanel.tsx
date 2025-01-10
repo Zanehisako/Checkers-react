@@ -3,11 +3,12 @@ import { useSocket } from "./socketcontext";
 
 interface timepanelProp {
   piece_type: number
+  time: number
+  slow: boolean
 }
 
-export function TimePanel({ piece_type }: timepanelProp) {
+export function TimePanel({ piece_type, time, slow }: timepanelProp) {
   const [messages, setMessages] = useState<string[]>([]);
-  const [time, setTime] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const socket = useSocket();
 
@@ -48,7 +49,6 @@ export function TimePanel({ piece_type }: timepanelProp) {
       console.log('Received move piece event:', position);
       if (piece_type === type) {
         setMessages(prevMessages => [...prevMessages, JSON.stringify(position)]);
-        setTime(prevtime => { return prevtime + time })
       }
     };
 
@@ -72,15 +72,7 @@ export function TimePanel({ piece_type }: timepanelProp) {
           </a>
         ))}
       </div>
-      <a className="bg-gray-200 border border-black">{time}</a>
+      <a className={`${slow ? 'bg-green-600' : 'bg-red-500'} border border-black"`}>{time}</a>
     </div>
   );
-}
-export function TimePanels() {
-
-  return (<div>
-    <TimePanel piece_type={1} />
-    <TimePanel piece_type={0} />
-  </div>
-  )
 }
