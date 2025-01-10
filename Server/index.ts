@@ -160,25 +160,25 @@ io.on("connection", (socket) => {
   console.log("boards white posti", boards[1]);
 
   socket.emit("init", boards);
-  socket.on("move piece", (position: Position, type: number) => {
+  socket.on("move piece", (position: Position, type: number,time:number) => {
     console.log("boards black posti", boards[0]);
     console.log("boards white posti", boards[1]);
     const result = logique(position, type);
     switch (result) {
       case Moves.MoveToEmptySpot:
         modifyPosition(position, type);
-        io.emit("update piece", position, type);
+        io.emit("update piece", position, type,time);
         console.log("boards black posti", boards[0]);
         break;
       case Moves.EatRight:
         modifyPosition(position, type);
-        io.emit("update piece", position, type);
+        io.emit("update piece", position, type,time);
         io.emit("remove piece", { ...position, x: position.x - 1, y: position.y + 1 }, type == 1 ? 0 : 1)
         console.log("boards black posti", boards[0]);
         break;
       case Moves.EatLeft:
         modifyPosition(position, type);
-        io.emit("update piece", position, type);
+        io.emit("update piece", position, type,time);
         io.emit("remove piece", { ...position, x: position.x + 1, y: position.y + 1 }, type == 1 ? 0 : 1)
         console.log("boards black posti", boards[0]);
         break;

@@ -1,4 +1,5 @@
 import socketio
+from numpy import random 
 
 sio = socketio.Client()
 
@@ -15,5 +16,5 @@ while True:
     y = int(input())
     print("type:")
     type_piece =int(input())
-    sio.emit("move piece",({'index':index,'x':x,'y':y},type_piece))
+    sio.emit("move piece",({'index':index,'x':x,'y':y},type_piece,random.randint(10)))
 
