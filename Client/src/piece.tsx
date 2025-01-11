@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { io } from "socket.io-client";
 import { useSocket } from "./socketcontext";
-
-
-enum Moves {
-  None,
-  MoveToEmptySpot,
-  EatRight,
-  EatLeft,
-  Upgrade,
-}
 
 interface PieceProps {
   index: number;
@@ -25,24 +15,17 @@ interface PieceProps {
 
 export function Piece({
   index,
-  SelectedIndex,
   type,
   source,
   x,
   y,
   onSelect,
-  onMove,
 }: PieceProps) {
   const socket = useSocket();
   const [position_x, setX] = useState(x);
   const [position_y, setY] = useState(y);
-  const [mouse_x, setMouseX] = useState(0);
-  const [new_index, setIndex] = useState(index);
+  const [new_index,] = useState(index);
 
-  const handleMouseDown = (event: React.MouseEvent) => {
-    const { clientX } = event;
-    setMouseX(clientX);
-  };
   useEffect(() => {
     socket.on("update piece", (newPos: Position) => {
       console.log("recived new pos: ,");
@@ -52,25 +35,6 @@ export function Piece({
       }
     });
   }, []);
-
-  const handleMouseUp = (event: React.MouseEvent) => {
-    const { clientX, clientY } = event;
-    if (clientX - mouse_x > 0) {
-      const position = {
-        index: index,
-        x: position_x + 1,
-        y: type === 0 ? position_y - 1 : position_y + 1,
-      };
-      socket.emit("move piece", position, type);
-    } else {
-      const position = {
-        index: index,
-        x: position_x - 1,
-        y: type === 0 ? position_y - 1 : position_y + 1,
-      };
-      socket.emit("move piece", position, type);
-    }
-  };
 
   return (
     <img
@@ -91,8 +55,6 @@ export function Piece({
             : [new_index + 7, new_index + 9],
         )
       }
-      onMouseDown={handleMouseDown}
-      onDragEnd={handleMouseUp}
     />
   );
 }
