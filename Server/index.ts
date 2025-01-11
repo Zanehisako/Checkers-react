@@ -72,6 +72,12 @@ const logique = (pos: Position, type: number) => {
       console.log("position white", pos);
       console.log("boards[0] posti", boards[0]);
       console.log("boards[1] posti", boards[1]);
+      const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
+      console.log("old_position_black", old_position_black)
+      if (old_position_black.y < pos.y) {
+        console.log("YOU SHALL NOT PASS!!")
+        return Moves.None
+      }
       if (
         !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
@@ -100,6 +106,11 @@ const logique = (pos: Position, type: number) => {
       console.log("position white", pos);
       console.log("boards[0] posti", boards[0]);
       console.log("boards[1] posti", boards[1]);
+      const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
+      if (old_position_white.y > pos.y) {
+        console.log("YOU SHALL NOT PASS!!")
+        return Moves.None
+      }
       if (
         !boards[0].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
@@ -160,7 +171,7 @@ io.on("connection", (socket) => {
   console.log("boards white posti", boards[1]);
 
   socket.emit("init", boards);
-  socket.on("move piece", (position: Position, type: number,time:number) => {
+  socket.on("move piece", (position: Position, type: number, time: number) => {
     console.log("time", time);
     console.log("boards black posti", boards[0]);
     console.log("boards white posti", boards[1]);
@@ -168,18 +179,18 @@ io.on("connection", (socket) => {
     switch (result) {
       case Moves.MoveToEmptySpot:
         modifyPosition(position, type);
-        io.emit("update piece", position, type,time);
+        io.emit("update piece", position, type, time);
         console.log("boards black posti", boards[0]);
         break;
       case Moves.EatRight:
         modifyPosition(position, type);
-        io.emit("update piece", position, type,time);
+        io.emit("update piece", position, type, time);
         io.emit("remove piece", { ...position, x: position.x - 1, y: position.y + 1 }, type == 1 ? 0 : 1)
         console.log("boards black posti", boards[0]);
         break;
       case Moves.EatLeft:
         modifyPosition(position, type);
-        io.emit("update piece", position, type,time);
+        io.emit("update piece", position, type, time);
         io.emit("remove piece", { ...position, x: position.x + 1, y: position.y + 1 }, type == 1 ? 0 : 1)
         console.log("boards black posti", boards[0]);
         break;
