@@ -78,6 +78,10 @@ const logique = (pos: Position, type: number) => {
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None
       }
+      if (old_position_black.x === pos.x) {
+        console.log("YOU SHALL NOT PASS!!")
+        return Moves.None
+      }
       if (
         !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
       ) {
@@ -108,6 +112,10 @@ const logique = (pos: Position, type: number) => {
       console.log("boards[1] posti", boards[1]);
       const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
       if (old_position_white.y > pos.y) {
+        console.log("YOU SHALL NOT PASS!!")
+        return Moves.None
+      }
+      if (old_position_white.x === pos.x) {
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None
       }
