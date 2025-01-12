@@ -69,16 +69,18 @@ var boards = initboard();
 const logique = (pos: Position, type: number) => {
   switch (type) {
     case 0:
-      console.log("position white", pos);
-      console.log("boards[0] posti", boards[0]);
-      console.log("boards[1] posti", boards[1]);
+      console.log("position black", pos);
       const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
       console.log("old_position_black", old_position_black)
       if (old_position_black.y < pos.y) {
+        console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None
       }
       if (old_position_black.x === pos.x) {
+        console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None
       }
@@ -103,19 +105,24 @@ const logique = (pos: Position, type: number) => {
 
       }
       else {
+        console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None;
       }
     case 1:
       console.log("position white", pos);
-      console.log("boards[0] posti", boards[0]);
-      console.log("boards[1] posti", boards[1]);
       const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
+      console.log("old_position_white", old_position_white)
       if (old_position_white.y > pos.y) {
+        console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None
       }
       if (old_position_white.x === pos.x) {
+        console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None
       }
@@ -140,6 +147,8 @@ const logique = (pos: Position, type: number) => {
 
       }
       else {
+        console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
         return Moves.None;
       }
