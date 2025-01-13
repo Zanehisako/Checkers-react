@@ -39,10 +39,19 @@ white_moves = [
     {'index': 21, 'x': 3, 'y': 4}   # Final defensive position
 ]
 
+@sio.on("rooms")
+def Handlerooms(rooms):
+    print("rooms are ",rooms)
+@sio.on("msg")
+def handleMsg(msg):
+    print(msg)
+
 @sio.event
 def connect():
     print("connected to localhost")
 sio.connect("http://localhost:3001")
+sio.emit("joinRoom",2)
+sio.wait()
 while True:
     for i in range(len(black_moves)-1):
         print("move",black_moves[i])

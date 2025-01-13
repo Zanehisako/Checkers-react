@@ -32,6 +32,7 @@ const io = new Server(server, {
   },
 });
 const board_size = 8;
+const userRooms = new Array()
 
 const initboard = () => {
   const black_pieces_pos: Position[] = [];
@@ -184,8 +185,18 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  console.log("boards black posti", boards[0]);
-  console.log("boards white posti", boards[1]);
+  //join a room 
+  socket.emit("rooms", userRooms);
+  socket.on("joinRoom", (room) => {
+    socket.join(room)
+    userRooms.push(room)
+    console.log('list of rooms', userRooms)
+    //notify the others in the room
+    socket.to(room).emit("msg", {
+      text: `User ${socket.id} has joined the room`,
+    })
+    socket.emit("msg", { text: `u joined room:${room}` })
+  })
 
   socket.emit("init", boards);
   socket.on("move piece", (position: Position, type: number, time: number) => {

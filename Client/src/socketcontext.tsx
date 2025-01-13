@@ -35,11 +35,19 @@ export function SocketProvider({ children }: SocketProviderProps) {
     const onError = (error: Error) => {
       console.error('Socket Error:', error);
     };
+    const onRooms = (rooms: Map<any, any>) => {
+      console.log("the rooms:", rooms)
+      console.log("the rooms size is :", rooms.size)
+      if (rooms.size === undefined) {
+        socket.emit("joinRoom", 1)
+      }
+    };
 
     // Register event handlers
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onError);
+    socket.on('rooms', onRooms);
 
     // Force connect if not already connected
     if (!socket.connected) {
