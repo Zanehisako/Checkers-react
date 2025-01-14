@@ -7,6 +7,7 @@ interface Position {
   index: number;
   x: number;
   y: number;
+  king: boolean
 }
 
 enum Moves {
@@ -45,6 +46,7 @@ const initboard = () => {
           index: index,
           x: i,
           y: j,
+          king: false
         });
       }
     }
@@ -58,6 +60,7 @@ const initboard = () => {
           index: index,
           x: i,
           y: j,
+          king: false
         });
       }
     }
@@ -156,6 +159,33 @@ const logique = (pos: Position, type: number) => {
   }
 };
 
+const gameLogique = (position: Position, type: number, time: number) => {
+  const result = logique(position, type);
+  switch (result) {
+    case Moves.MoveToEmptySpot:
+      modifyPosition(position, type);
+      io.emit("update piece", position, type, time);
+      console.log("boards black posti", boards[0]);
+      break;
+    case Moves.EatRight:
+      modifyPosition(position, type);
+      io.emit("update piece", position, type, time);
+      io.emit("remove piece", { ...position, x: position.x - 1, y: position.y + 1 }, type == 1 ? 0 : 1)
+      console.log("boards black posti", boards[0]);
+      break;
+    case Moves.EatLeft:
+      modifyPosition(position, type);
+      io.emit("update piece", position, type, time);
+      io.emit("remove piece", { ...position, x: position.x + 1, y: position.y + 1 }, type == 1 ? 0 : 1)
+      console.log("boards black posti", boards[0]);
+      break;
+    default:
+      break;
+  }
+
+}
+
+
 const modifyPosition = (newPosition: Position, type: number) => {
   switch (type) {
     case 0:
@@ -203,28 +233,7 @@ io.on("connection", (socket) => {
     console.log("time", time);
     console.log("boards black posti", boards[0]);
     console.log("boards white posti", boards[1]);
-    const result = logique(position, type);
-    switch (result) {
-      case Moves.MoveToEmptySpot:
-        modifyPosition(position, type);
-        io.emit("update piece", position, type, time);
-        console.log("boards black posti", boards[0]);
-        break;
-      case Moves.EatRight:
-        modifyPosition(position, type);
-        io.emit("update piece", position, type, time);
-        io.emit("remove piece", { ...position, x: position.x - 1, y: position.y + 1 }, type == 1 ? 0 : 1)
-        console.log("boards black posti", boards[0]);
-        break;
-      case Moves.EatLeft:
-        modifyPosition(position, type);
-        io.emit("update piece", position, type, time);
-        io.emit("remove piece", { ...position, x: position.x + 1, y: position.y + 1 }, type == 1 ? 0 : 1)
-        console.log("boards black posti", boards[0]);
-        break;
-      default:
-        break;
-    }
+    gameLogique(position, type, time)
   });
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
