@@ -70,7 +70,8 @@ const initboard = () => {
 
 var boards = initboard();
 
-const logique = (pos: Position, type: number) => {
+const logique = (pos: Position, type: number, time: number) => {
+  var result;
   switch (type) {
     case 0:
       console.log("position black", pos);
@@ -80,13 +81,13 @@ const logique = (pos: Position, type: number) => {
         console.log("boards[0] posti", boards[0]);
         console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
-        return Moves.None
+        result = Moves.None
       }
       if (old_position_black.x === pos.x) {
         console.log("boards[0] posti", boards[0]);
         console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
-        return Moves.None
+        result = Moves.None
       }
       if (
         !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
@@ -96,7 +97,7 @@ const logique = (pos: Position, type: number) => {
           boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
         ) {
           console.log("EatRight");
-          return Moves.EatRight;
+          result = Moves.EatRight;
         }
         else if (
           boards[1].some((position) => position.x + 1 === pos.x && position.y + 1 === pos.y)
@@ -104,7 +105,7 @@ const logique = (pos: Position, type: number) => {
           console.log("EatLeft");
           return Moves.EatLeft;
         } else {
-          return Moves.MoveToEmptySpot;
+          result = Moves.MoveToEmptySpot;
         }
 
       }
@@ -112,7 +113,7 @@ const logique = (pos: Position, type: number) => {
         console.log("boards[0] posti", boards[0]);
         console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
-        return Moves.None;
+        result = Moves.None;
       }
     case 1:
       console.log("position white", pos);
@@ -122,13 +123,13 @@ const logique = (pos: Position, type: number) => {
         console.log("boards[0] posti", boards[0]);
         console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
-        return Moves.None
+        result = Moves.None
       }
       if (old_position_white.x === pos.x) {
         console.log("boards[0] posti", boards[0]);
         console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
-        return Moves.None
+        result = Moves.None
       }
       if (
         !boards[0].some((position) => position.x == pos.x && position.y == pos.y)
@@ -144,9 +145,9 @@ const logique = (pos: Position, type: number) => {
           boards[0].some((position) => position.x + 1 === pos.x && position.y - 1 === pos.y)
         ) {
           console.log("EatLeft");
-          return Moves.EatLeft;
+          result = Moves.EatLeft;
         } else {
-          return Moves.MoveToEmptySpot;
+          result = Moves.MoveToEmptySpot;
         }
 
       }
@@ -154,34 +155,34 @@ const logique = (pos: Position, type: number) => {
         console.log("boards[0] posti", boards[0]);
         console.log("boards[1] posti", boards[1]);
         console.log("YOU SHALL NOT PASS!!")
-        return Moves.None;
+        result = Moves.None;
       }
+  }
+  switch (result) {
+    case Moves.MoveToEmptySpot:
+      modifyPosition(pos, type);
+      io.emit("update piece", pos, type, time);
+      console.log("boards black posti", boards[0]);
+      break;
+    case Moves.EatRight:
+      modifyPosition(pos, type);
+      io.emit("update piece", pos, type, time);
+      io.emit("remove piece", { ...pos, x: pos.x - 1, y: pos.y + 1 }, type == 1 ? 0 : 1)
+      console.log("boards black posti", boards[0]);
+      return logique({ ...pos, x: pos.x + 1, y: type == 0 ? pos.y + 1 : pos.y - 1 }, type, time)
+    case Moves.EatLeft:
+      modifyPosition(pos, type);
+      io.emit("update piece", pos, type, time);
+      io.emit("remove piece", { ...pos, x: pos.x + 1, y: pos.y + 1 }, type == 1 ? 0 : 1)
+      console.log("boards black posti", boards[0]);
+      return logique({ ...pos, x: pos.x - 1, y: type == 0 ? pos.y + 1 : pos.y - 1 }, type, time)
+    default:
+      break;
   }
 };
 
 const gameLogique = (position: Position, type: number, time: number) => {
-  const result = logique(position, type);
-  switch (result) {
-    case Moves.MoveToEmptySpot:
-      modifyPosition(position, type);
-      io.emit("update piece", position, type, time);
-      console.log("boards black posti", boards[0]);
-      break;
-    case Moves.EatRight:
-      modifyPosition(position, type);
-      io.emit("update piece", position, type, time);
-      io.emit("remove piece", { ...position, x: position.x - 1, y: position.y + 1 }, type == 1 ? 0 : 1)
-      console.log("boards black posti", boards[0]);
-      break;
-    case Moves.EatLeft:
-      modifyPosition(position, type);
-      io.emit("update piece", position, type, time);
-      io.emit("remove piece", { ...position, x: position.x + 1, y: position.y + 1 }, type == 1 ? 0 : 1)
-      console.log("boards black posti", boards[0]);
-      break;
-    default:
-      break;
-  }
+  const result = logique(position, type, time);
 
 }
 
