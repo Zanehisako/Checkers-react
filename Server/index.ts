@@ -10,6 +10,12 @@ interface Position {
   king: boolean
 }
 
+interface Room {
+  players: string[];
+  size: number;
+  spectators: string[];
+}
+
 enum Moves {
   None,
   MoveToEmptySpot,
@@ -33,7 +39,8 @@ const io = new Server(server, {
   },
 });
 const board_size = 8;
-const userRooms = new Array()
+const emptyRooms = new Map<number, Room>()
+const fullRooms = new Map<number, Room>()
 
 const initboard = () => {
   const black_pieces_pos: Position[] = [];
@@ -217,29 +224,53 @@ const modifyPosition = (newPosition: Position, type: number) => {
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
   //join a room 
-  socket.emit("rooms", userRooms);
-  socket.on("joinRoom", (room) => {
-    socket.join(room)
-    userRooms.push(room)
-    console.log('list of rooms', userRooms)
-    //notify the others in the room
-    socket.to(room).emit("msg", {
-      text: `User ${socket.id} has joined the room`,
-    })
-    socket.emit("msg", { text: `u joined room:${room}` })
-  })
+  socket.emit("rooms", emptyRooms);
+  socket.on("joinRoom as player", (room: number) => {
+    var current_room = emptyRooms.get(room) ?? fullRooms.get(room)
+    if (current_room === undefined) {
+      socket.emit("msg", "Room doesn't exits");
+    } else {
+      switch (current_room.size) {
+        case 1:
+          current_room.size += 1
+          current_room.players.push(socket.id)
+          fullRooms.set(room, current_room)
+          emptyRooms.delete(room)
+          break;
 
-  socket.emit("init", boards);
-  socket.on("move piece", (position: Position, type: number, time: number) => {
-    console.log("time", time);
-    console.log("boards black posti", boards[0]);
-    console.log("boards white posti", boards[1]);
-    gameLogique(position, type, time)
-  });
-  socket.on("disconnect", () => {
-    console.log("🔥: A user disconnected");
+        default:
+          socket.emit("msg", "Room is full ");
+          break;
+
+      }
+    }
+    socket.on("Create Room", (room_number: number) => {
+      var current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
+      if (current_room === undefined) {
+        const room: Room = {
+          size: 1,
+          players: [socket.id],
+          spectators: []
+        }
+        emptyRooms.set(room_number, room)
+      } else {
+        socket.emit("msg", "Room does exits");
+      }
+    });
+
+    socket.emit("init", boards);
+    socket.on("move piece", (position: Position, type: number, time: number) => {
+      console.log("time", time);
+      console.log("boards black posti", boards[0]);
+      console.log("boards white posti", boards[1]);
+      gameLogique(position, type, time)
+    });
+    socket.on("disconnect", () => {
+      console.log("🔥: A user disconnected");
+    });
   });
 });
+
 server.listen(PORT, () => {
   console.log("im listning on ", PORT);
 });
