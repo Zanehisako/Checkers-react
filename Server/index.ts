@@ -232,10 +232,12 @@ io.on("connection", (socket) => {
     } else {
       switch (current_room.size) {
         case 1:
+          socket.join(room.toString())
           current_room.size += 1
           current_room.players.push(socket.id)
           fullRooms.set(room, current_room)
           emptyRooms.delete(room)
+          socket.to(room.toString()).emit("Start Game")
           break;
 
         default:
@@ -244,9 +246,19 @@ io.on("connection", (socket) => {
 
       }
     }
+    socket.on("joinRoom as Spectator", (room: number) => {
+      var current_room = emptyRooms.get(room) ?? fullRooms.get(room)
+      if (current_room === undefined) {
+        socket.emit("msg", "Room doesn't exits");
+      } else {
+        socket.join(room.toString())
+        current_room.spectators.push(socket.id)
+      }
+    });
     socket.on("Create Room", (room_number: number) => {
       var current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
       if (current_room === undefined) {
+        socket.join(room_number.toString())
         const room: Room = {
           size: 1,
           players: [socket.id],
