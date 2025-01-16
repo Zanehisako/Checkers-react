@@ -270,12 +270,20 @@ io.on("connection", (socket) => {
       }
     });
 
+    var isProcessing = false;
+
     socket.emit("init", boards);
     socket.on("move piece", (position: Position, type: number, time: number) => {
-      console.log("time", time);
-      console.log("boards black posti", boards[0]);
-      console.log("boards white posti", boards[1]);
-      gameLogique(position, type, time)
+      if (isProcessing) {
+        return;
+      } else {
+        isProcessing = true;
+        console.log("time", time);
+        console.log("boards black posti", boards[0]);
+        console.log("boards white posti", boards[1]);
+        gameLogique(position, type, time)
+        isProcessing = false;
+      }
     });
     socket.on("disconnect", () => {
       console.log("🔥: A user disconnected");
