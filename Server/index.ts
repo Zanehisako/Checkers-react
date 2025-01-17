@@ -166,27 +166,7 @@ const logique = (pos: Position, type: number, time: number) => {
         result = Moves.None;
       }
   }
-  switch (result) {
-    case Moves.MoveToEmptySpot:
-      modifyPosition(pos, type);
-      io.emit("update piece", pos, type, time);
-      console.log("boards black posti", boards[0]);
-      break;
-    case Moves.EatRight:
-      modifyPosition(pos, type);
-      io.emit("update piece", pos, type, time);
-      io.emit("remove piece", { ...pos, x: pos.x - 1, y: pos.y + 1 }, type == 1 ? 0 : 1)
-      console.log("boards black posti", boards[0]);
-      return logique({ ...pos, x: pos.x + 1, y: type == 0 ? pos.y + 1 : pos.y - 1 }, type, time)
-    case Moves.EatLeft:
-      modifyPosition(pos, type);
-      io.emit("update piece", pos, type, time);
-      io.emit("remove piece", { ...pos, x: pos.x + 1, y: pos.y + 1 }, type == 1 ? 0 : 1)
-      console.log("boards black posti", boards[0]);
-      return logique({ ...pos, x: pos.x - 1, y: type == 0 ? pos.y + 1 : pos.y - 1 }, type, time)
-    default:
-      break;
-  }
+  return result
 };
 
 const gameLogique = (position: Position, type: number, time: number) => {
