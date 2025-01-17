@@ -86,14 +86,14 @@ const logique = (pos: Position, type: number, time: number) => {
       const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
       console.log("old_position_black", old_position_black)
       if (old_position_black.y < pos.y) {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
+        /*console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);*/
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
       if (old_position_black.x === pos.x) {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
+        /* console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]); */
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
@@ -118,24 +118,25 @@ const logique = (pos: Position, type: number, time: number) => {
 
       }
       else {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
+        /* console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]); */
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None;
       }
+      break;
     case 1:
       console.log("position white", pos);
       const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
       console.log("old_position_white", old_position_white)
       if (old_position_white.y > pos.y) {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
+        /* console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]); */
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
       if (old_position_white.x === pos.x) {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
+        /* console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]); */
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
@@ -160,11 +161,12 @@ const logique = (pos: Position, type: number, time: number) => {
 
       }
       else {
-        console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);
+        /* console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]); */
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None;
       }
+      break;
   }
   return result
 };
@@ -204,7 +206,7 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { size: 0, players: [], spectators: [], turn: 0 }
+  var current_room: Room | undefined = { size: 0, players: [], spectators: [], turn: 1 }
   //join a room 
   socket.emit("rooms", emptyRooms);
   socket.on("join room as player", async (room: number) => {
@@ -233,7 +235,7 @@ io.on("connection", (socket) => {
       }
     }
   }),
-    socket.on("join room as spectator", (room: number) => {
+    socket.on("join room as spectator", async (room: number) => {
       var current_room = emptyRooms.get(room) ?? fullRooms.get(room)
       if (current_room === undefined) {
         socket.emit("msg", "Room doesn't exits");
@@ -242,7 +244,7 @@ io.on("connection", (socket) => {
         current_room.spectators.push(socket.id)
       }
     });
-  socket.on("create room", (room_number: number) => {
+  socket.on("create room", async (room_number: number) => {
     var current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
     if (current_room === undefined) {
       socket.join(room_number.toString())
@@ -250,7 +252,7 @@ io.on("connection", (socket) => {
         size: 1,
         players: [socket.id],
         spectators: [],
-        turn: 0
+        turn: 1
       }
       socket.emit("msg", "Room Created Successfully");
       emptyRooms.set(room_number, room)
@@ -260,15 +262,18 @@ io.on("connection", (socket) => {
   });
 
   socket.emit("init", boards);
-  socket.on("move piece", (position: Position, type: number, time: number) => {
-    if (current_room?.turn !== type) {
+  socket.on("move piece", async (position: Position, type: number, time: number) => {
+    console.log("current Room", current_room)
+    console.log("type", type)
+    if (current_room?.turn == type) {
+      console.log("its not u're turn nigga damn!", type)
       return;
     } else {
       console.log("time", time);
       console.log("boards black posti", boards[0]);
       console.log("boards white posti", boards[1]);
       gameLogique(position, type, time)
-      current_room.turn = type == 1 ? 0 : 1;
+      current_room!.turn = type == 0 ? 0 : 1;
     }
   });
   socket.on("disconnect", () => {
