@@ -224,21 +224,26 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
+  var current_room: Room | undefined = { size: 0, players: [], spectators: [], turn: 0 }
   //join a room 
   socket.emit("rooms", emptyRooms);
-  socket.on("joinRoom as player", (room: number) => {
-    var current_room = emptyRooms.get(room) ?? fullRooms.get(room)
+  socket.on("join room as player", async (room: number) => {
+    console.log("join room as player")
+    current_room = emptyRooms.get(room) ?? fullRooms.get(room)
     if (current_room === undefined) {
       socket.emit("msg", "Room doesn't exits");
     } else {
       switch (current_room.size) {
         case 1:
-          socket.join(room.toString())
+          await socket.join(room.toString())
           current_room.size += 1
           current_room.players.push(socket.id)
           fullRooms.set(room, current_room)
           emptyRooms.delete(room)
-          socket.to(room.toString()).emit("Start Game")
+          console.log("player joined room Successfully")
+          socket.emit("msg", "joined room Successfully");
+          console.log("Room", room.toString())
+          io.to(room.toString()).emit("Start Game")
           break;
 
         default:
@@ -247,7 +252,8 @@ io.on("connection", (socket) => {
 
       }
     }
-    socket.on("joinRoom as Spectator", (room: number) => {
+  }),
+    socket.on("join room as spectator", (room: number) => {
       var current_room = emptyRooms.get(room) ?? fullRooms.get(room)
       if (current_room === undefined) {
         socket.emit("msg", "Room doesn't exits");
@@ -256,37 +262,37 @@ io.on("connection", (socket) => {
         current_room.spectators.push(socket.id)
       }
     });
-    socket.on("Create Room", (room_number: number) => {
-      var current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
-      if (current_room === undefined) {
-        socket.join(room_number.toString())
-        const room: Room = {
-          size: 1,
-          players: [socket.id],
-          spectators: [],
-          turn: 0
-        }
-        emptyRooms.set(room_number, room)
-      } else {
-        socket.emit("msg", "Room does exits");
+  socket.on("create room", (room_number: number) => {
+    var current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
+    if (current_room === undefined) {
+      socket.join(room_number.toString())
+      const room: Room = {
+        size: 1,
+        players: [socket.id],
+        spectators: [],
+        turn: 0
       }
-    });
+      socket.emit("msg", "Room Created Successfully");
+      emptyRooms.set(room_number, room)
+    } else {
+      socket.emit("msg", "Room does exits");
+    }
+  });
 
-    socket.emit("init", boards);
-    socket.on("move piece", (position: Position, type: number, time: number) => {
-      if (current_room?.turn !== type) {
-        return;
-      } else {
-        console.log("time", time);
-        console.log("boards black posti", boards[0]);
-        console.log("boards white posti", boards[1]);
-        gameLogique(position, type, time)
-        current_room.turn = type == 1 ? 0 : 1;
-      }
-    });
-    socket.on("disconnect", () => {
-      console.log("🔥: A user disconnected");
-    });
+  socket.emit("init", boards);
+  socket.on("move piece", (position: Position, type: number, time: number) => {
+    if (current_room?.turn !== type) {
+      return;
+    } else {
+      console.log("time", time);
+      console.log("boards black posti", boards[0]);
+      console.log("boards white posti", boards[1]);
+      gameLogique(position, type, time)
+      current_room.turn = type == 1 ? 0 : 1;
+    }
+  });
+  socket.on("disconnect", () => {
+    console.log("🔥: A user disconnected");
   });
 });
 

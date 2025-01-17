@@ -45,19 +45,24 @@ def Handlerooms(rooms):
 @sio.on("msg")
 def handleMsg(msg):
     print(msg)
+@sio.on("Start Game")
+def StartGame():
+    print("Start Game")
+    while True:
+        for i in range(len(black_moves)-1):
+            print("move",black_moves[i])
+            sio.emit("move piece",(black_moves[i],0,random.randint(10)))
+            time.sleep(0.5)
+            sio.emit("move piece",(white_moves[i],1,random.randint(10)))
+            time.sleep(0.5)
+        break
+
 
 @sio.event
 def connect():
     print("connected to localhost")
 sio.connect("http://localhost:3001")
-sio.emit("joinRoom",2)
+sio.emit("join room as player",2)
+sio.emit("create room",2)
+sio.emit("join room as player",2)
 sio.wait()
-while True:
-    for i in range(len(black_moves)-1):
-        print("move",black_moves[i])
-        sio.emit("move piece",(black_moves[i],0,random.randint(10)))
-        time.sleep(0.5)
-        sio.emit("move piece",(white_moves[i],1,random.randint(10)))
-        time.sleep(0.5)
-    break
-
