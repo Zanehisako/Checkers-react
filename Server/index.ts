@@ -14,6 +14,7 @@ interface Room {
   players: string[];
   size: number;
   spectators: string[];
+  turn: number;
 }
 
 enum Moves {
@@ -262,7 +263,8 @@ io.on("connection", (socket) => {
         const room: Room = {
           size: 1,
           players: [socket.id],
-          spectators: []
+          spectators: [],
+          turn: 0
         }
         emptyRooms.set(room_number, room)
       } else {
@@ -270,19 +272,16 @@ io.on("connection", (socket) => {
       }
     });
 
-    var isProcessing = false;
-
     socket.emit("init", boards);
     socket.on("move piece", (position: Position, type: number, time: number) => {
-      if (isProcessing) {
+      if (current_room?.turn !== type) {
         return;
       } else {
-        isProcessing = true;
         console.log("time", time);
         console.log("boards black posti", boards[0]);
         console.log("boards white posti", boards[1]);
         gameLogique(position, type, time)
-        isProcessing = false;
+        current_room.turn = type == 1 ? 0 : 1;
       }
     });
     socket.on("disconnect", () => {
