@@ -34,8 +34,10 @@ white_moves = [
 ]
 
 @sio.on("rooms")
-def Handlerooms(rooms):
-    print("rooms are ",rooms)
+def Handlerooms(emptyRooms,fullRooms):
+    print("empty rooms are ",fullRooms)
+    print("full rooms are ",emptyRooms)
+
 @sio.on("msg")
 def handleMsg(msg):
     print(msg)

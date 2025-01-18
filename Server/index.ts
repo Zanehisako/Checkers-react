@@ -208,7 +208,8 @@ io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
   var current_room: Room | undefined = { size: 0, players: [], spectators: [], turn: 1 }
   //join a room 
-  socket.emit("rooms", emptyRooms);
+  console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+  socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
   socket.on("join room as player", async (room: number) => {
     console.log("join room as player")
     current_room = emptyRooms.get(room) ?? fullRooms.get(room)
