@@ -47,15 +47,16 @@ export function Rooms() {
     }
 
   }, [isConnected, socket])
-  const onNavigate = () => {
+  const onNavigate = (room: number) => {
     console.log('navigateing',)
-    navigate("/Game")
+    socket.emit("join room as spectator", room)
+    navigate(`/Game`)
   }
   return (<div className="flex flex-row justify-evenly">
     <div className="flex flex-col justify-evenly">
       <h1>emptyRooms</h1>
       {emptyRooms.map((value, index) => (
-        <button key={index} className="bg-gray-300" onClick={onNavigate} >
+        <button key={index} className="bg-gray-300" onClick={() => onNavigate(value)} >
           {value}
         </button>
       ))}
@@ -63,7 +64,7 @@ export function Rooms() {
     <div className="flex flex-col justify-evenly">
       <h1>FullRooms</h1>
       {fullRooms.map((value, index) => (
-        <button key={index} className="bg-gray-300" onClick={onNavigate}>
+        <button key={index} className="bg-gray-300" onClick={() => onNavigate(value)}>
           {value}
         </button>
       ))}

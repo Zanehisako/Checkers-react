@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Board, MainBoard } from "./board";
 import io from "socket.io-client";
 import { TimePanel } from "./timepanel";
 import { useSocket } from "./socketcontext";
 
 function Client() {
+  const { room } = useParams()
   const [Time1, setTime1] = useState(0);
   const [Time2, setTime2] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -68,7 +69,7 @@ function Client() {
   const navigate = useNavigate();
   const onNavigate = () => {
     console.log('navigateing',)
-    navigate("/rooms")
+    navigate("/")
   }
 
   return (

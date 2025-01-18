@@ -11,6 +11,7 @@ interface Position {
 }
 
 interface Room {
+  number: string;
   players: string[];
   size: number;
   spectators: string[];
@@ -206,7 +207,7 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { size: 0, players: [], spectators: [], turn: 1 }
+  var current_room: Room | undefined = { number: "", size: 0, players: [], spectators: [], turn: 1 }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
   socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
@@ -253,6 +254,7 @@ io.on("connection", (socket) => {
     if (current_room === undefined) {
       socket.join(room_number.toString())
       const room: Room = {
+        number: room_number.toString(),
         size: 1,
         players: [socket.id],
         spectators: [],
@@ -276,12 +278,30 @@ io.on("connection", (socket) => {
       console.log("time", time);
       console.log("boards black posti", boards[0]);
       console.log("boards white posti", boards[1]);
-      gameLogique(position, type, time)
+      const result = logique(position, type, time)
+      switch (result) {
+        case Moves.EatLeft:
+          io.to(current_room!.number).emit("update piece", position, type, time)
+          break;
+        case Moves.EatRight:
+          io.to(current_room!.number).emit("update piece", position, type, time)
+          break;
+        case Moves.MoveToEmptySpot:
+          io.to(current_room!.number).emit("update piece", position, type, time)
+          break;
+
+        default:
+          break;
+      }
       current_room!.turn = type == 0 ? 0 : 1;
     }
   });
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
+    current_room!.size -= 1
+    const player_index = current_room!.players.findIndex((player) => { player = socket.id })
+    current_room!.players = current_room!.players.slice(0, player_index)
+    console.log(current_room)
   });
 });
 
