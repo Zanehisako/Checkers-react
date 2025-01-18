@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Board, MainBoard } from "./board";
 import io from "socket.io-client";
 import { TimePanel } from "./timepanel";
@@ -64,9 +65,15 @@ function Client() {
       socket.off("update piece", handleMovePiece);
     };
   }, [socket, isConnected, Time1, Time2]); // Depend on latest values of Time1, Time2
+  const navigate = useNavigate();
+  const onNavigate = () => {
+    console.log('navigateing',)
+    navigate("/rooms")
+  }
 
   return (
     <div className="bg-gray-900 h-screen w-screen">
+      <button className="bg-white" onClick={onNavigate}>Rooms</button>
       <div className="flex flex-row h-screen w-screen justify-around items-center" >
         <TimePanel time={Time1} piece_type={0} slow={slowIndex === 0} />
         <MainBoard />

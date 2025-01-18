@@ -11,13 +11,9 @@ root.render(
   <React.StrictMode>
     <SocketProvider>
       <Router>
-        <nav>
-          <Link to="/">Rooms</Link>
-          <Link to="/page2">Game</Link>
-        </nav>
         <Routes>
-          <Route path="/" element={<Rooms />} />
-          <Route path="/page2" element={<Client />} />
+          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/Game" element={<Client />} />
         </Routes>
       </Router>
     </SocketProvider>

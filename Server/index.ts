@@ -225,6 +225,7 @@ io.on("connection", (socket) => {
           emptyRooms.delete(room)
           console.log("player joined room Successfully")
           socket.emit("msg", "joined room Successfully");
+          io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
           console.log("Room", room.toString())
           io.to(room.toString()).emit("Start Game")
           break;

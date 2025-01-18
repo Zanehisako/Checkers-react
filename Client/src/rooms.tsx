@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react"
 import { useSocket } from "./socketcontext";
+import { useNavigate } from "react-router-dom";
 
 export function Rooms() {
   const socket = useSocket();
   const [emptyRooms, setEmptyRooms] = useState<number[]>([])
   const [fullRooms, setFullRooms] = useState<number[]>([])
   const [isConnected, setIsConnected] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     function onConnect() {
@@ -45,23 +47,27 @@ export function Rooms() {
     }
 
   }, [isConnected, socket])
-  return (<body className="flex flex-row justify-evenly">
+  const onNavigate = () => {
+    console.log('navigateing',)
+    navigate("/Game")
+  }
+  return (<div className="flex flex-row justify-evenly">
     <div className="flex flex-col justify-evenly">
       <h1>emptyRooms</h1>
       {emptyRooms.map((value, index) => (
-        <a key={index} className="bg-gray-300" >
+        <button key={index} className="bg-gray-300" onClick={onNavigate} >
           {value}
-        </a>
+        </button>
       ))}
     </div>
     <div className="flex flex-col justify-evenly">
       <h1>FullRooms</h1>
       {fullRooms.map((value, index) => (
-        <a key={index} className="bg-gray-300">
+        <button key={index} className="bg-gray-300" onClick={onNavigate}>
           {value}
-        </a>
+        </button>
       ))}
     </div>
 
-  </body>)
+  </div>)
 }
