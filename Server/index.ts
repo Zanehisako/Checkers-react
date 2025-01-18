@@ -214,7 +214,7 @@ io.on("connection", (socket) => {
     current_room = emptyRooms.get(room) ?? fullRooms.get(room)
     if (current_room === undefined) {
       socket.emit("msg", "Room doesn't exits");
-    } else {
+    } else if (!current_room.players.includes(socket.id)) {
       switch (current_room.size) {
         case 1:
           await socket.join(room.toString())
@@ -233,6 +233,8 @@ io.on("connection", (socket) => {
           break;
 
       }
+    } else {
+      socket.emit("msg", "The client is already in the room");
     }
   }),
     socket.on("join room as spectator", async (room: number) => {
