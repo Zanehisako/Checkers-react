@@ -69,6 +69,7 @@ function Client() {
   const navigate = useNavigate();
   const onNavigate = () => {
     console.log('navigateing',)
+    socket.emit("leave room", room)
     navigate("/")
   }
 

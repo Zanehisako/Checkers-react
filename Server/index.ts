@@ -211,6 +211,9 @@ io.on("connection", (socket) => {
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
   socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+  socket.on("leave room", async (room: number) => {
+    socket.leave(room.toString())
+  })
   socket.on("join room as player", async (room: number) => {
     console.log("join room as player")
     current_room = emptyRooms.get(room) ?? fullRooms.get(room)
@@ -262,6 +265,7 @@ io.on("connection", (socket) => {
       }
       socket.emit("msg", "Room Created Successfully");
       emptyRooms.set(room_number, room)
+      io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
     } else {
       socket.emit("msg", "Room does exits");
     }

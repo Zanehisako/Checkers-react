@@ -11,12 +11,16 @@ export function Rooms() {
 
   useEffect(() => {
     function onConnect() {
-      console.log('Socket connected in TimePanel!');
       setIsConnected(true);
+      socket.on("rooms", (emptyRooms, fullRooms) => {
+        console.log('emptyRooms', emptyRooms)
+        console.log('fullRooms', fullRooms)
+        setEmptyRooms(emptyRooms)
+        setFullRooms(fullRooms)
+      })
     }
 
     function onDisconnect() {
-      console.log('Socket disconnected in TimePanel!');
       setIsConnected(false);
     }
 
