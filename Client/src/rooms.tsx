@@ -54,7 +54,7 @@ export function Rooms() {
   const onNavigate = (room: number) => {
     console.log('navigateing',)
     socket.emit("join room as spectator", room)
-    navigate(`/Game`)
+    navigate(`/Game/${room}`)
   }
   return (<div className="flex flex-row justify-evenly">
     <div className="flex flex-col justify-evenly">

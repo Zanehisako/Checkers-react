@@ -292,10 +292,13 @@ io.on("connection", (socket) => {
           break;
         case Moves.MoveToEmptySpot:
           io.to(current_room!.number).emit("update piece", position, type, time)
+          io.to(current_room!.number).except(socket.id).emit("U're Turn")
           current_room!.turn = type == 0 ? 0 : 1;
           break;
 
         default:
+          current_room!.turn = type == 0 ? 0 : 1;
+          io.to(current_room!.number).except(socket.id).emit("U're Turn")
           break;
       }
     }

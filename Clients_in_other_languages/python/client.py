@@ -41,6 +41,11 @@ def Handlerooms(emptyRooms,fullRooms):
 @sio.on("msg")
 def handleMsg(msg):
     print(msg)
+
+@sio.on("U're Turn")
+def handleMsg():
+    print("My turn bitches")
+
 @sio.on("Start Game")
 def StartGame():
     print("Start Game")

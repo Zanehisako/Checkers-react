@@ -13,7 +13,7 @@ root.render(
       <Router>
         <Routes>
           <Route path="/" element={<Rooms />} />
-          <Route path="/Game" element={<Client />} />
+          <Route path="/Game/:room" element={<Client />} />
         </Routes>
       </Router>
     </SocketProvider>
