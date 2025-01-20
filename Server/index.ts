@@ -292,12 +292,12 @@ io.on("connection", (socket) => {
           break;
         case Moves.MoveToEmptySpot:
           io.to(current_room!.number).emit("update piece", position, type, time)
+          current_room!.turn = type == 0 ? 0 : 1;
           break;
 
         default:
           break;
       }
-      current_room!.turn = type == 0 ? 0 : 1;
     }
   });
   socket.on("disconnect", () => {
