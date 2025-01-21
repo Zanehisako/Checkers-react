@@ -12,7 +12,7 @@ interface Position {
 
 interface Room {
   number: string;
-  players: string[];
+  players: Map<string, boolean>;
   size: number;
   spectators: string[];
   turn: number;
@@ -207,7 +207,7 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { number: "", size: 0, players: [], spectators: [], turn: 1 }
+  var current_room: Room | undefined = { number: "", size: 0, players: new Map<string, boolean>, spectators: [], turn: 1 }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
   socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
@@ -219,12 +219,12 @@ io.on("connection", (socket) => {
     current_room = emptyRooms.get(room) ?? fullRooms.get(room)
     if (current_room === undefined) {
       socket.emit("msg", "Room doesn't exits");
-    } else if (!current_room.players.includes(socket.id)) {
+    } else if (!current_room.players.has(socket.id)) {
       switch (current_room.size) {
         case 1:
           await socket.join(room.toString())
           current_room.size += 1
-          current_room.players.push(socket.id)
+          current_room.players.set(socket.id, true)
           fullRooms.set(room, current_room)
           emptyRooms.delete(room)
           console.log("player joined room Successfully")
@@ -259,7 +259,7 @@ io.on("connection", (socket) => {
       const room: Room = {
         number: room_number.toString(),
         size: 1,
-        players: [socket.id],
+        players: new Map<string, boolean>,
         spectators: [],
         turn: 1
       }
@@ -306,8 +306,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
     current_room!.size -= 1
-    const player_index = current_room!.players.findIndex((player) => { player = socket.id })
-    current_room!.players = current_room!.players.slice(0, player_index)
+    current_room?.players.delete(socket.id)
     console.log(current_room)
   });
 });
