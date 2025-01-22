@@ -63,8 +63,26 @@ def StartGame():
 @sio.event
 def connect():
     print("connected to localhost")
+
 sio.connect("http://localhost:3001")
-sio.emit("join room as player",2)
-sio.emit("create room",2)
-sio.emit("join room as player",2)
+time.sleep(0.5)
+print("------Play as :\n0:Black\n1:White------")
+choise_type= int(input())
+print("------Join or Create Room:------\n0:Create room : \n1:Join Room :")
+choise_room= int(input())
+match choise_room:
+    case 0:
+        print("Enter room number:")
+        room_number= int(input())
+        sio.emit("create room",room_number)
+    case 1 :
+        print("Enter room number:")
+        room_number= int(input())
+        print("join as spectator or player?:\n0:Player:\n1:Spectator")
+        player_or_spectator= int(input())
+        match player_or_spectator:
+            case 0:
+                sio.emit("join room as player",room_number)
+            case 1:
+                sio.emit("join room as spectator",room_number)
 sio.wait()

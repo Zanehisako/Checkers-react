@@ -261,7 +261,7 @@ io.on("connection", (socket) => {
         size: 1,
         players: new Map<string, number>,
         spectators: [],
-        turn: 0
+        turn: 1 //1 cuz the first move is gonna be of type 0 
       }
       room.players.set(socket.id, 0)
       socket.emit("msg", "Room Created Successfully");
