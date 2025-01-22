@@ -12,7 +12,7 @@ interface Position {
 
 interface Room {
   number: string;
-  players: Map<string, boolean>;
+  players: Map<string, number>;
   size: number;
   spectators: string[];
   turn: number;
@@ -207,7 +207,7 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { number: "", size: 0, players: new Map<string, boolean>, spectators: [], turn: 1 }
+  var current_room: Room | undefined = { number: "", size: 0, players: new Map<string, number>, spectators: [], turn: 1 }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
   socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
@@ -224,14 +224,14 @@ io.on("connection", (socket) => {
         case 1:
           await socket.join(room.toString())
           current_room.size += 1
-          current_room.players.set(socket.id, true)
+          current_room.players.set(socket.id, 1)
           fullRooms.set(room, current_room)
           emptyRooms.delete(room)
           console.log("player joined room Successfully")
           socket.emit("msg", "joined room Successfully");
           io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
           console.log("Room", room.toString())
-          io.to(room.toString()).emit("Start Game")
+          io.to(room.toString()).except(socket.id).emit("U're turn")
           break;
 
         default:
@@ -259,10 +259,11 @@ io.on("connection", (socket) => {
       const room: Room = {
         number: room_number.toString(),
         size: 1,
-        players: new Map<string, boolean>,
+        players: new Map<string, number>,
         spectators: [],
-        turn: 1
+        turn: 0
       }
+      room.players.set(socket.id, 0)
       socket.emit("msg", "Room Created Successfully");
       emptyRooms.set(room_number, room)
       io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
@@ -273,6 +274,10 @@ io.on("connection", (socket) => {
 
   socket.emit("init", boards);
   socket.on("move piece", async (position: Position, type: number, time: number) => {
+    //this make sure only players can send moves not spectators for example
+    if (!current_room?.players.has(socket.id)) {
+      return;
+    }
     console.log("current Room", current_room)
     console.log("type", type)
     if (current_room?.turn == type) {
