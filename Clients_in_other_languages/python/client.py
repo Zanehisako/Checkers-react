@@ -64,9 +64,9 @@ def StartGame():
 def connect():
     print("connected to localhost")
 
-sio.connect("http://localhost:3001")
+sio.connect("https://hagfish-witty-roughly.ngrok-free.app/")
 time.sleep(0.5)
-print("------Play as :\n0:Black\n1:White------")
+print("------Play as :\n0:Black\n1:White")
 choise_type= int(input())
 print("------Join or Create Room:------\n0:Create room : \n1:Join Room :")
 choise_room= int(input())
