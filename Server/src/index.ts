@@ -85,15 +85,13 @@ const logique = (boards: Position[][], pos: Position, type: number, time: number
       console.log("position black", pos);
       const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
       console.log("old_position_black", old_position_black)
-      if (old_position_black.y < pos.y) {
+      if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
         /*console.log("boards[0] posti", boards[0]);
         console.log("boards[1] posti", boards[1]);*/
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
-      if (old_position_black.x === pos.x) {
-        /* console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]); */
+      if ((pos.y - old_position_black.y > 2 || (pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false)) {
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
@@ -128,15 +126,13 @@ const logique = (boards: Position[][], pos: Position, type: number, time: number
       console.log("position white", pos);
       const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
       console.log("old_position_white", old_position_white)
-      if (old_position_white.y > pos.y) {
-        /* console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]); */
+      if (old_position_white.y < pos.y || old_position_white.x === pos.x) {
+        /*console.log("boards[0] posti", boards[0]);
+        console.log("boards[1] posti", boards[1]);*/
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
-      if (old_position_white.x === pos.x) {
-        /* console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]); */
+      if ((pos.y - old_position_white.y > 2 || (pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false)) {
         console.log("YOU SHALL NOT PASS!!")
         result = Moves.None
       }
