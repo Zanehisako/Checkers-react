@@ -11,6 +11,7 @@ interface Position {
 }
 
 interface Room {
+  board: Position[][] | undefined,
   number: number;
   players: Map<string, number>;
   size: number;
@@ -77,10 +78,8 @@ const initboard = () => {
   return [black_pieces_pos, white_pieces_pos];
 };
 
-var boards = initboard();
-
-const logique = (pos: Position, type: number, time: number) => {
-  var result;
+const logique = (boards: Position[][], pos: Position, type: number, time: number) => {
+  var result: Moves;
   switch (type) {
     case 0:
       console.log("position black", pos);
@@ -172,13 +171,25 @@ const logique = (pos: Position, type: number, time: number) => {
   return result
 };
 
-const gameLogique = (position: Position, type: number, time: number) => {
-  const result = logique(position, type, time);
+
+const updateBoard = (board: Position[][], newPosition: Position, type: number) => {
+  switch (type) {
+    case 0:
+      var old_position_black = board[0][board[0].findIndex((position) => position.index == newPosition.index)]
+      old_position_black = newPosition
+
+      break;
+
+    case 1:
+      var old_position_white = board[1][board[1].findIndex((position) => position.index == newPosition.index)]
+      old_position_white = newPosition
+
+      break;
+  }
 
 }
 
-
-const modifyPosition = (newPosition: Position, type: number) => {
+const modifyPosition = (boards: Position[][], newPosition: Position, type: number) => {
   switch (type) {
     case 0:
       const index_black = boards[0].findIndex(
@@ -207,7 +218,7 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1 }
+  var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: undefined }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
   socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
@@ -225,6 +236,7 @@ io.on("connection", (socket) => {
           await socket.join(room.toString())
           current_room.size += 1
           current_room.players.set(socket.id, 1)
+          current_room.board = initboard()
           fullRooms.set(room, current_room)
           emptyRooms.delete(room)
           console.log("player joined room Successfully")
@@ -249,6 +261,7 @@ io.on("connection", (socket) => {
         socket.emit("msg", "Room doesn't exits");
       } else {
         socket.join(room.toString())
+        socket.emit("board", current_room.board)
         current_room.spectators.push(socket.id)
       }
     });
@@ -261,7 +274,8 @@ io.on("connection", (socket) => {
         size: 1,
         players: new Map<string, number>,
         spectators: [],
-        turn: 1 //1 cuz the first move is gonna be of type 0 
+        turn: 1,//1 cuz the first move is gonna be of type 0 
+        board: undefined
       }
       current_room = room
       room.players.set(socket.id, 0)
@@ -273,7 +287,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.emit("init", boards);
   socket.on("move piece", async (position: Position, type: number, time: number) => {
     //this make sure only players can send moves not spectators for example
     if (!current_room?.players.has(socket.id)) {
@@ -286,26 +299,15 @@ io.on("connection", (socket) => {
       return;
     } else {
       console.log("time", time);
-      console.log("boards black posti", boards[0]);
-      console.log("boards white posti", boards[1]);
-      const result = logique(position, type, time)
-      switch (result) {
-        case Moves.EatLeft:
-          io.to(current_room!.number.toString()).emit("update piece", position, type, time)
-          break;
-        case Moves.EatRight:
-          io.to(current_room!.number.toString()).emit("update piece", position, type, time)
-          break;
-        case Moves.MoveToEmptySpot:
-          io.to(current_room!.number.toString()).emit("update piece", position, type, time)
-          io.to(current_room!.number.toString()).except(socket.id).emit("U're Turn")
-          current_room!.turn = type == 0 ? 0 : 1;
-          break;
-
-        default:
-          current_room!.turn = type == 0 ? 0 : 1;
-          io.to(current_room!.number.toString()).except(socket.id).emit("U're Turn")
-          break;
+      const result = logique(current_room.board, position, type, time)
+      if (result == Moves.EatLeft || result == Moves.EatRight || result == Moves.MoveToEmptySpot) {
+        updateBoard(current_room.board, position, type)
+        io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+        current_room!.turn = type == 0 ? 0 : 1;
+        io.to(current_room!.number.toString()).except(socket.id).emit("U're Turn")
+      } else {
+        current_room!.turn = type == 0 ? 0 : 1;
+        io.to(current_room!.number.toString()).except(socket.id).emit("U're Turn")
       }
     }
   });
