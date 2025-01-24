@@ -35,8 +35,8 @@ white_moves = [
 
 @sio.on("rooms")
 def Handlerooms(emptyRooms,fullRooms):
-    print("empty rooms are ",fullRooms)
-    print("full rooms are ",emptyRooms)
+    print("empty rooms are ",emptyRooms)
+    print("full rooms are ",fullRooms)
 
 @sio.on("msg")
 def handleMsg(msg):
@@ -62,9 +62,9 @@ def StartGame():
 
 @sio.event
 def connect():
-    print("connected to localhost")
+    print("connected successfully")
 
-sio.connect("https://hagfish-witty-roughly.ngrok-free.app/")
+sio.connect("http://localhost:3001")
 time.sleep(0.5)
 print("------Play as :\n0:Black\n1:White")
 choise_type= int(input())

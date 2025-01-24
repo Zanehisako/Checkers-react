@@ -11,7 +11,7 @@ interface Position {
 }
 
 interface Room {
-  number: string;
+  number: number;
   players: Map<string, number>;
   size: number;
   spectators: string[];
@@ -207,11 +207,11 @@ const modifyPosition = (newPosition: Position, type: number) => {
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { number: "", size: 0, players: new Map<string, number>, spectators: [], turn: 1 }
+  var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1 }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
   socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
-  socket.on("leave room", async (room: number) => {
+  socket.on("leave room", async (room: String) => {
     socket.leave(room.toString())
   })
   socket.on("join room as player", async (room: number) => {
@@ -253,16 +253,17 @@ io.on("connection", (socket) => {
       }
     });
   socket.on("create room", async (room_number: number) => {
-    var current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
+    current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
     if (current_room === undefined) {
       socket.join(room_number.toString())
       const room: Room = {
-        number: room_number.toString(),
+        number: room_number,
         size: 1,
         players: new Map<string, number>,
         spectators: [],
         turn: 1 //1 cuz the first move is gonna be of type 0 
       }
+      current_room = room
       room.players.set(socket.id, 0)
       socket.emit("msg", "Room Created Successfully");
       emptyRooms.set(room_number, room)
@@ -290,29 +291,45 @@ io.on("connection", (socket) => {
       const result = logique(position, type, time)
       switch (result) {
         case Moves.EatLeft:
-          io.to(current_room!.number).emit("update piece", position, type, time)
+          io.to(current_room!.number.toString()).emit("update piece", position, type, time)
           break;
         case Moves.EatRight:
-          io.to(current_room!.number).emit("update piece", position, type, time)
+          io.to(current_room!.number.toString()).emit("update piece", position, type, time)
           break;
         case Moves.MoveToEmptySpot:
-          io.to(current_room!.number).emit("update piece", position, type, time)
-          io.to(current_room!.number).except(socket.id).emit("U're Turn")
+          io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+          io.to(current_room!.number.toString()).except(socket.id).emit("U're Turn")
           current_room!.turn = type == 0 ? 0 : 1;
           break;
 
         default:
           current_room!.turn = type == 0 ? 0 : 1;
-          io.to(current_room!.number).except(socket.id).emit("U're Turn")
+          io.to(current_room!.number.toString()).except(socket.id).emit("U're Turn")
           break;
       }
     }
   });
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
-    current_room!.size -= 1
+    if (current_room.size > 0) {
+      current_room!.size -= 1
+    }
     current_room?.players.delete(socket.id)
-    console.log(current_room)
+    switch (current_room.size) {
+      case 0:
+        console.log(current_room.number)
+        emptyRooms.delete(current_room.number)
+        console.log("deleting empty room")
+        break;
+      case 1:
+        fullRooms.delete(current_room.number)
+        emptyRooms.set(current_room.number, current_room)
+        console.log("deleting full room and creating a full room")
+        break;
+    }
+    io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+    console.log("empty rooms", emptyRooms)
+    console.log("full rooms", fullRooms)
   });
 });
 
