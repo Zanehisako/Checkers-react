@@ -239,7 +239,7 @@ io.on("connection", (socket) => {
           socket.emit("msg", "joined room Successfully");
           io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
           console.log("Room", room.toString())
-          io.to(room.toString()).except(socket.id).emit("U're turn")
+          io.to(room.toString()).except(socket.id).emit("turn")
           break;
 
         default:
@@ -256,11 +256,17 @@ io.on("connection", (socket) => {
       if (current_room === undefined) {
         socket.emit("msg", "Room doesn't exits");
       } else {
-        socket.join(room.toString())
-        socket.emit("board", current_room.board)
+        await socket.join(room.toString())
+        io.to(current_room.number.toString()).emit("board", current_room.board)
         current_room.spectators.push(socket.id)
       }
     });
+
+  socket.on("get board", async (room_number: number) => {
+    console.log("room", fullRooms.get(room_number))
+    //socket.emit("board", fullRooms.get(room_number).board)
+
+  })
   socket.on("create room", async (room_number: number) => {
     current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
     if (current_room === undefined) {
@@ -309,25 +315,37 @@ io.on("connection", (socket) => {
   });
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
-    if (current_room.size > 0) {
-      current_room!.size -= 1
-    }
-    current_room?.players.delete(socket.id)
-    switch (current_room.size) {
-      case 0:
-        console.log(current_room.number)
-        emptyRooms.delete(current_room.number)
-        console.log("deleting empty room")
+    const isPlayer = current_room.players.has(socket.id)
+
+    switch (isPlayer) {
+      case true:
+        if (current_room.size > 0) {
+          current_room!.size -= 1
+        }
+        current_room?.players.delete(socket.id)
+        switch (current_room.size) {
+          case 0:
+            console.log(current_room.number)
+            emptyRooms.delete(current_room.number)
+            console.log("deleting empty room")
+            break;
+          case 1:
+            fullRooms.delete(current_room.number)
+            emptyRooms.set(current_room.number, current_room)
+            console.log("deleting full room and creating a full room")
+            break;
+        }
+        io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+        console.log("empty rooms", emptyRooms)
+        console.log("full rooms", fullRooms)
+
         break;
-      case 1:
-        fullRooms.delete(current_room.number)
-        emptyRooms.set(current_room.number, current_room)
-        console.log("deleting full room and creating a full room")
+
+      case false:
+        const index = current_room.spectators.indexOf(socket.id)
+        current_room.spectators.splice(index, 1)
         break;
     }
-    io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
-    console.log("empty rooms", emptyRooms)
-    console.log("full rooms", fullRooms)
   });
 });
 

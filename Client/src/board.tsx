@@ -56,21 +56,6 @@ export function Board({
     return pieces;
   });
   useEffect(() => {
-    console.log("init");
-
-    socket.on("init", (boards: Position[][]) => {
-      type === types.White
-        ? console.log("white init")
-        : console.log("black init");
-      console.log("boards", boards);
-      console.log("positions_state", positions_state);
-      positions_state === boards[0] || boards[1]
-        ? console.log("the same")
-        : console.log("not the same should rerender");
-      SetPosition(type == types.Black ? boards[0] : boards[1]);
-      console.log("finished set board");
-    });
-
     socket.on("update piece", (position: Position) => {
       SetPieces((prev) => {
         const index = prev.findIndex(
@@ -132,86 +117,104 @@ export function Board({
   return pieces;
 }
 
-function init(type: types) {
-  const board_size = 8;
-  var positions: Position[] = [];
-  switch (type) {
-    case types.Black:
-      for (let i = 0; i < 8; i++) {
-        for (let j = 5; j < 8; j++) {
-          const index = i + j * board_size;
-          if ((i + j) % 2 !== 0) {
-            const position: Position = { index: index, x: i, y: j };
-            positions.push(position);
-          }
-        }
-      }
-      return positions;
-
-    case types.White:
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 3; j++) {
-          const index = i + j * board_size;
-          if ((i + j) % 2 !== 0) {
-            const position: Position = { index: index, x: i, y: j };
-            positions.push(position);
-          }
-        }
-      }
-      return positions;
-  }
-}
 
 export function MainBoard() {
-  const [black_pieces_positions, SetBlack] = useState<Position[]>([]);
-  const [white_pieces_positions, SetWhite] = useState<Position[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [blackPieces, setBlackPieces] = useState<Position[]>(getInitialBlackPositions());
+  const [whitePieces, setWhitePieces] = useState<Position[]>(getInitialWhitePositions());
+  const [selectedCell, setSelectedCell] = useState([0, 0]);
+  const socket = useSocket();
+  const boardSize = 8;
 
-  const [cellIndex, SetCell] = useState([0, 0]);
-  const board_size = 8;
+  useEffect(() => {
+    const handleBoardUpdate = (boards: Position[][]) => {
+      setBlackPieces(boards[0]);
+      setWhitePieces(boards[1]);
+      setIsLoading(false);
+    };
 
-  const socket = useSocket()
-  const move = (position: Position, type: number) => {
+    socket.on("board", handleBoardUpdate);
+    socket.emit("get_initial_board");
+
+    return () => {
+      socket.off("board", handleBoardUpdate);
+    };
+  }, [socket]);
+
+  const move = (position: Position, type: types) => {
     socket.emit("move", { position, type });
   };
 
-  const Black_pieces = Board({
-    type: types.Black,
-    positions: init(0)!,
-    cellIndex,
-    SetCell,
-    move,
-  });
-
-  const White_pieces = Board({
-    type: types.White,
-    positions: init(1)!,
-    cellIndex,
-    SetCell,
-    move,
-  });
-
-  const cells = () => {
-    const cells = [];
-    for (let row = 0; row < board_size; row++) {
-      for (let col = 0; col < board_size; col++) {
-        const key = col + row * board_size;
-        cells.push(
-          Cell({
-            key: key,
-            isSelected: cellIndex,
-            type: (row + col) % 2 === 0 ? 1 : 0,
-          }),
-        );
-      }
-    }
-    return cells;
-  };
+  if (isLoading) {
+    return <div className="loading">Loading board...</div>;
+  }
 
   return (
     <div className="grid grid-cols-8 w-128 h-128 relative">
-      {cells()}
-      {Black_pieces}
-      {White_pieces}
+      {createCells(boardSize)}
+      <Board
+        type={types.Black}
+        positions={blackPieces}
+        cellIndex={selectedCell}
+        SetCell={setSelectedCell}
+        move={move}
+      />
+      <Board
+        type={types.White}
+        positions={whitePieces}
+        cellIndex={selectedCell}
+        SetCell={setSelectedCell}
+        move={move}
+      />
     </div>
   );
+}
+
+// Default chess starting positions using your Position interface
+function getInitialBlackPositions(): Position[] {
+  return [
+    // Pawns (y=1)
+    ...Array(8).fill(0).map((_, x) => ({ x, y: 1, index: x + 1 * 8 })),
+    // Other pieces (y=0)
+    { x: 0, y: 0, index: 0 },   // Rook
+    { x: 7, y: 0, index: 7 },   // Rook
+    { x: 1, y: 0, index: 1 },   // Knight
+    { x: 6, y: 0, index: 6 },   // Knight
+    { x: 2, y: 0, index: 2 },   // Bishop
+    { x: 5, y: 0, index: 5 },   // Bishop
+    { x: 3, y: 0, index: 3 },   // Queen
+    { x: 4, y: 0, index: 4 },   // King
+  ];
+}
+
+function getInitialWhitePositions(): Position[] {
+  return [
+    // Pawns (y=6)
+    ...Array(8).fill(0).map((_, x) => ({ x, y: 6, index: x + 6 * 8 })),
+    // Other pieces (y=7)
+    { x: 0, y: 7, index: 56 },  // Rook
+    { x: 7, y: 7, index: 63 },  // Rook
+    { x: 1, y: 7, index: 57 },  // Knight
+    { x: 6, y: 7, index: 62 },  // Knight
+    { x: 2, y: 7, index: 58 },  // Bishop
+    { x: 5, y: 7, index: 61 },  // Bishop
+    { x: 3, y: 7, index: 59 },  // Queen
+    { x: 4, y: 7, index: 60 },  // King
+  ];
+}
+
+function createCells(size: number) {
+  const cells = [];
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const index = x + y * size;
+      cells.push(
+        <Cell
+          key={index}
+          type={(x + y) % 2 === 0 ? 1 : 0}
+        />
+      );
+    }
+  }
+  return cells;
 }

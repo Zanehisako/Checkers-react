@@ -60,7 +60,7 @@ export function Rooms() {
     <div className="flex flex-col justify-evenly">
       <h1>emptyRooms</h1>
       {emptyRooms.map((value, index) => (
-        <button key={index} className="bg-gray-300" onClick={() => onNavigate(value)} >
+        <button key={index} className="bg-gray-300" >
           {value}
         </button>
       ))}

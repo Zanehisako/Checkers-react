@@ -59,23 +59,20 @@ const initboard = () => {
     }
     return [black_pieces_pos, white_pieces_pos];
 };
-var boards = initboard();
-const logique = (pos, type, time) => {
+const logique = (boards, pos, type, time) => {
     var result;
     switch (type) {
         case 0:
             console.log("position black", pos);
             const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)];
             console.log("old_position_black", old_position_black);
-            if (old_position_black.y < pos.y) {
+            if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
                 /*console.log("boards[0] posti", boards[0]);
                 console.log("boards[1] posti", boards[1]);*/
                 console.log("YOU SHALL NOT PASS!!");
                 result = Moves.None;
             }
-            if (old_position_black.x === pos.x) {
-                /* console.log("boards[0] posti", boards[0]);
-                console.log("boards[1] posti", boards[1]); */
+            if ((pos.y - old_position_black.y > 2 || (pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false)) {
                 console.log("YOU SHALL NOT PASS!!");
                 result = Moves.None;
             }
@@ -104,15 +101,13 @@ const logique = (pos, type, time) => {
             console.log("position white", pos);
             const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)];
             console.log("old_position_white", old_position_white);
-            if (old_position_white.y > pos.y) {
-                /* console.log("boards[0] posti", boards[0]);
-                console.log("boards[1] posti", boards[1]); */
+            if (old_position_white.y < pos.y || old_position_white.x === pos.x) {
+                /*console.log("boards[0] posti", boards[0]);
+                console.log("boards[1] posti", boards[1]);*/
                 console.log("YOU SHALL NOT PASS!!");
                 result = Moves.None;
             }
-            if (old_position_white.x === pos.x) {
-                /* console.log("boards[0] posti", boards[0]);
-                console.log("boards[1] posti", boards[1]); */
+            if ((pos.y - old_position_white.y > 2 || (pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false)) {
                 console.log("YOU SHALL NOT PASS!!");
                 result = Moves.None;
             }
@@ -140,10 +135,19 @@ const logique = (pos, type, time) => {
     }
     return result;
 };
-const gameLogique = (position, type, time) => {
-    const result = logique(position, type, time);
+const updateBoard = (board, newPosition, type) => {
+    switch (type) {
+        case 0:
+            var old_position_black = board[0][board[0].findIndex((position) => position.index == newPosition.index)];
+            old_position_black = newPosition;
+            break;
+        case 1:
+            var old_position_white = board[1][board[1].findIndex((position) => position.index == newPosition.index)];
+            old_position_white = newPosition;
+            break;
+    }
 };
-const modifyPosition = (newPosition, type) => {
+const modifyPosition = (boards, newPosition, type) => {
     switch (type) {
         case 0:
             const index_black = boards[0].findIndex((item) => item.index === newPosition.index);
@@ -161,7 +165,7 @@ const modifyPosition = (newPosition, type) => {
 };
 io.on("connection", (socket) => {
     console.log(`⚡: ${socket.id} user just connected!`);
-    var current_room = { number: 0, size: 0, players: new Map, spectators: [], turn: 1 };
+    var current_room = { number: 0, size: 0, players: new Map, spectators: [], turn: 1, board: undefined };
     //join a room 
     console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
     socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
@@ -180,13 +184,14 @@ io.on("connection", (socket) => {
                     await socket.join(room.toString());
                     current_room.size += 1;
                     current_room.players.set(socket.id, 1);
+                    current_room.board = initboard();
                     fullRooms.set(room, current_room);
                     emptyRooms.delete(room);
                     console.log("player joined room Successfully");
                     socket.emit("msg", "joined room Successfully");
                     io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
                     console.log("Room", room.toString());
-                    io.to(room.toString()).except(socket.id).emit("U're turn");
+                    io.to(room.toString()).except(socket.id).emit("turn");
                     break;
                 default:
                     socket.emit("msg", "Room is full ");
@@ -203,10 +208,15 @@ io.on("connection", (socket) => {
                 socket.emit("msg", "Room doesn't exits");
             }
             else {
-                socket.join(room.toString());
+                await socket.join(room.toString());
+                io.to(current_room.number.toString()).emit("board", current_room.board);
                 current_room.spectators.push(socket.id);
             }
         });
+    socket.on("get board", async (room_number) => {
+        console.log("room", fullRooms.get(room_number));
+        //socket.emit("board", fullRooms.get(room_number).board)
+    });
     socket.on("create room", async (room_number) => {
         current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number);
         if (current_room === undefined) {
@@ -216,7 +226,8 @@ io.on("connection", (socket) => {
                 size: 1,
                 players: new Map,
                 spectators: [],
-                turn: 1 //1 cuz the first move is gonna be of type 0 
+                turn: 1, //1 cuz the first move is gonna be of type 0 
+                board: undefined
             };
             current_room = room;
             room.players.set(socket.id, 0);
@@ -228,7 +239,6 @@ io.on("connection", (socket) => {
             socket.emit("msg", "Room does exits");
         }
     });
-    socket.emit("init", boards);
     socket.on("move piece", async (position, type, time) => {
         //this make sure only players can send moves not spectators for example
         if (!current_room?.players.has(socket.id)) {
@@ -242,49 +252,49 @@ io.on("connection", (socket) => {
         }
         else {
             console.log("time", time);
-            console.log("boards black posti", boards[0]);
-            console.log("boards white posti", boards[1]);
-            const result = logique(position, type, time);
-            switch (result) {
-                case Moves.EatLeft:
-                    io.to(current_room.number.toString()).emit("update piece", position, type, time);
-                    break;
-                case Moves.EatRight:
-                    io.to(current_room.number.toString()).emit("update piece", position, type, time);
-                    break;
-                case Moves.MoveToEmptySpot:
-                    io.to(current_room.number.toString()).emit("update piece", position, type, time);
-                    io.to(current_room.number.toString()).except(socket.id).emit("U're Turn");
-                    current_room.turn = type == 0 ? 0 : 1;
-                    break;
-                default:
-                    current_room.turn = type == 0 ? 0 : 1;
-                    io.to(current_room.number.toString()).except(socket.id).emit("U're Turn");
-                    break;
+            const result = logique(current_room.board, position, type, time);
+            if (result == Moves.EatLeft || result == Moves.EatRight || result == Moves.MoveToEmptySpot) {
+                updateBoard(current_room.board, position, type);
+                io.to(current_room.number.toString()).emit("update piece", position, type, time);
+                current_room.turn = type == 0 ? 0 : 1;
+                io.to(current_room.number.toString()).except(socket.id).emit("U're Turn");
+            }
+            else {
+                current_room.turn = type == 0 ? 0 : 1;
+                io.to(current_room.number.toString()).except(socket.id).emit("U're Turn");
             }
         }
     });
     socket.on("disconnect", () => {
         console.log("🔥: A user disconnected");
-        if (current_room.size > 0) {
-            current_room.size -= 1;
-        }
-        current_room?.players.delete(socket.id);
-        switch (current_room.size) {
-            case 0:
-                console.log(current_room.number);
-                emptyRooms.delete(current_room.number);
-                console.log("deleting empty room");
+        const isPlayer = current_room.players.has(socket.id);
+        switch (isPlayer) {
+            case true:
+                if (current_room.size > 0) {
+                    current_room.size -= 1;
+                }
+                current_room?.players.delete(socket.id);
+                switch (current_room.size) {
+                    case 0:
+                        console.log(current_room.number);
+                        emptyRooms.delete(current_room.number);
+                        console.log("deleting empty room");
+                        break;
+                    case 1:
+                        fullRooms.delete(current_room.number);
+                        emptyRooms.set(current_room.number, current_room);
+                        console.log("deleting full room and creating a full room");
+                        break;
+                }
+                io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
+                console.log("empty rooms", emptyRooms);
+                console.log("full rooms", fullRooms);
                 break;
-            case 1:
-                fullRooms.delete(current_room.number);
-                emptyRooms.set(current_room.number, current_room);
-                console.log("deleting full room and creating a full room");
+            case false:
+                const index = current_room.spectators.indexOf(socket.id);
+                current_room.spectators.splice(index, 1);
                 break;
         }
-        io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
-        console.log("empty rooms", emptyRooms);
-        console.log("full rooms", fullRooms);
     });
 });
 server.listen(PORT, () => {

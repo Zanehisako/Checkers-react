@@ -4,6 +4,10 @@ from numpy import random
 
 sio = socketio.Client()
 
+move = 0
+choise_room = 0
+room_number = 0
+
 black_moves = [
     # Black piece 42 moves (starts at x:2, y:5)
     {'index': 42, 'x': 3, 'y': 4,'king':False},  # First diagonal move
@@ -42,9 +46,10 @@ def Handlerooms(emptyRooms,fullRooms):
 def handleMsg(msg):
     print(msg)
 
-@sio.on("U're Turn")
-def handleMsg():
-    print("My turn bitches")
+@sio.on("turn")
+def turn():
+    print("my turn bitch")
+    sio.emit("move piece",(black_moves[move],0,random.randint(10)))
 
 @sio.on("Start Game")
 def StartGame():
@@ -66,8 +71,6 @@ def connect():
 
 sio.connect("http://localhost:3001")
 time.sleep(0.5)
-print("------Play as :\n0:Black\n1:White")
-choise_type= int(input())
 print("------Join or Create Room:------\n0:Create room : \n1:Join Room :")
 choise_room= int(input())
 match choise_room:

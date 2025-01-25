@@ -1,10 +1,9 @@
 interface CellProps {
   key: number; // or `React.Key` if it's used as a React key
-  isSelected: number[];
   type: number; // or another appropriate type
 }
 
-export function Cell({ key, isSelected, type }: CellProps) {
+export function Cell({ key, type }: CellProps) {
   const get_Cell_Color = (type: number) =>
     type === 1 ? "bg-white" : "bg-orange-900";
 
@@ -12,10 +11,8 @@ export function Cell({ key, isSelected, type }: CellProps) {
     <div
       key={key}
       className={
-        isSelected[0] === key || isSelected[1] === key
-          ? `w-16 h-16 ${get_Cell_Color(type)} border-2 border-red-500`
-          : `w-16 h-16 ${get_Cell_Color(type)}`
+        `w-16 h-16 ${get_Cell_Color(type)}`
       }
-    ></div>
+    ></div >
   );
 }
