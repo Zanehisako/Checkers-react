@@ -69,7 +69,7 @@ export function Rooms() {
     <div className="flex flex-col justify-center items-center gap-3">
       <h1 className="text-white rounded-full font-bold" >Empty Rooms :</h1>
       {emptyRooms.map((value, index) => (
-        <GlowButton key={index} value={value} onNavigate={onNavigate} />
+        <GlowButton key={index} value={value} onNavigate={() => { }} />
       ))}
     </div>
     <div className="flex flex-col justify-center items-center gap-3 ">
