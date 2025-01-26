@@ -7,6 +7,7 @@ sio = socketio.Client()
 move = 0
 choise_room = 0
 room_number = 0
+player_type = 0
 
 black_moves = [
     # Black piece 42 moves (starts at x:2, y:5)
@@ -49,7 +50,18 @@ def handleMsg(msg):
 @sio.on("turn")
 def turn():
     print("my turn bitch")
-    sio.emit("move piece",(black_moves[move],0,random.randint(10)))
+    global move
+    match player_type:
+        case 0:
+            if move <= len(black_moves):
+                sio.emit("move piece",(black_moves[move],player_type,random.randint(10)))
+                print(len(black_moves))
+                move+=1
+        case 1:
+            if move <= len(white_moves):
+                sio.emit("move piece",(white_moves[move],player_type,random.randint(10)))
+                print(len(white_moves))
+                move+=1
 
 @sio.on("Start Game")
 def StartGame():
@@ -85,6 +97,8 @@ match choise_room:
         player_or_spectator= int(input())
         match player_or_spectator:
             case 0:
+                print("------Play as :------\n0:Black\n1:White")
+                player_type= int(input())
                 sio.emit("join room as player",room_number)
             case 1:
                 sio.emit("join room as spectator",room_number)

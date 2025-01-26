@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useSocket } from "./socketcontext";
 import { useNavigate } from "react-router-dom";
+import GlowButton from "./glowbutton";
 
 export function Rooms() {
   const socket = useSocket();
@@ -56,21 +57,17 @@ export function Rooms() {
     socket.emit("join room as spectator", room)
     navigate(`/Game/${room}`)
   }
-  return (<div className="flex flex-row justify-evenly">
-    <div className="flex flex-col justify-evenly">
-      <h1>emptyRooms</h1>
+  return (<div className="bg-gray-900 min-h-screen flex items-center justify-evenly text-white">
+    <div className="flex flex-col justify-center items-center gap-3">
+      <h1 className="text-white rounded-full font-bold" >Empty Rooms :</h1>
       {emptyRooms.map((value, index) => (
-        <button key={index} className="bg-gray-300" >
-          {value}
-        </button>
+        <GlowButton key={index} value={value} onNavigate={onNavigate} />
       ))}
     </div>
-    <div className="flex flex-col justify-evenly">
-      <h1>FullRooms</h1>
+    <div className="flex flex-col justify-center items-center gap-3 ">
+      <h1 className="text-white rounded-full font-bold">Full Rooms:</h1>
       {fullRooms.map((value, index) => (
-        <button key={index} className="bg-gray-300" onClick={() => onNavigate(value)}>
-          {value}
-        </button>
+        <GlowButton key={index} value={value} onNavigate={onNavigate} />
       ))}
     </div>
 

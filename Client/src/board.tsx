@@ -134,7 +134,7 @@ export function MainBoard() {
     };
 
     socket.on("board", handleBoardUpdate);
-    socket.emit("get_initial_board");
+    socket.emit("get board");
 
     return () => {
       socket.off("board", handleBoardUpdate);

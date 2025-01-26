@@ -70,11 +70,17 @@ const logique = (boards, pos, type, time) => {
                 /*console.log("boards[0] posti", boards[0]);
                 console.log("boards[1] posti", boards[1]);*/
                 console.log("YOU SHALL NOT PASS!!");
-                result = Moves.None;
+                console.log("old_position_black.y < pos.y || old_position_black.x === pos.x");
+                return result = Moves.None;
             }
-            if ((pos.y - old_position_black.y > 2 || (pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false)) {
+            if ((pos.x - old_position_black.x > 2 || old_position_black.x - pos.x > 2) && pos.king == false) {
                 console.log("YOU SHALL NOT PASS!!");
-                result = Moves.None;
+                console.log("(pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false");
+                return result = Moves.None;
+            }
+            if ((pos.y - old_position_black.y > 2 || old_position_black.y - pos.y > 2) && pos.king == false) {
+                console.log("YOU SHALL NOT PASS!!");
+                return result = Moves.None;
             }
             if (!boards[1].some((position) => position.x == pos.x && position.y == pos.y)) {
                 console.log("spot is empty");
@@ -101,15 +107,21 @@ const logique = (boards, pos, type, time) => {
             console.log("position white", pos);
             const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)];
             console.log("old_position_white", old_position_white);
-            if (old_position_white.y < pos.y || old_position_white.x === pos.x) {
+            if (old_position_white.y > pos.y || old_position_white.x === pos.x) {
                 /*console.log("boards[0] posti", boards[0]);
                 console.log("boards[1] posti", boards[1]);*/
                 console.log("YOU SHALL NOT PASS!!");
-                result = Moves.None;
+                console.log("old_position_white.y < pos.y || old_position_white.x === pos.x");
+                return result = Moves.None;
             }
-            if ((pos.y - old_position_white.y > 2 || (pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false)) {
+            if ((pos.x - old_position_white.x > 2 || old_position_white.x - pos.x > 2) && pos.king == false) {
                 console.log("YOU SHALL NOT PASS!!");
-                result = Moves.None;
+                console.log("(pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false");
+                return result = Moves.None;
+            }
+            if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
+                console.log("YOU SHALL NOT PASS!!");
+                return result = Moves.None;
             }
             if (!boards[0].some((position) => position.x == pos.x && position.y == pos.y)) {
                 console.log("spot is empty");
@@ -138,12 +150,16 @@ const logique = (boards, pos, type, time) => {
 const updateBoard = (board, newPosition, type) => {
     switch (type) {
         case 0:
-            var old_position_black = board[0][board[0].findIndex((position) => position.index == newPosition.index)];
-            old_position_black = newPosition;
+            const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
+            if (indexBlack > -1) {
+                board[0][indexBlack] = newPosition; // ✅ Direct array update
+            }
             break;
         case 1:
-            var old_position_white = board[1][board[1].findIndex((position) => position.index == newPosition.index)];
-            old_position_white = newPosition;
+            const indexWhite = board[1].findIndex(p => p.index === newPosition.index);
+            if (indexWhite > -1) {
+                board[1][indexWhite] = newPosition; // ✅ Direct array update
+            }
             break;
     }
 };
@@ -203,7 +219,7 @@ io.on("connection", (socket) => {
         }
     }),
         socket.on("join room as spectator", async (room) => {
-            var current_room = emptyRooms.get(room) ?? fullRooms.get(room);
+            current_room = emptyRooms.get(room) ?? fullRooms.get(room);
             if (current_room === undefined) {
                 socket.emit("msg", "Room doesn't exits");
             }
@@ -213,9 +229,9 @@ io.on("connection", (socket) => {
                 current_room.spectators.push(socket.id);
             }
         });
-    socket.on("get board", async (room_number) => {
-        console.log("room", fullRooms.get(room_number));
-        //socket.emit("board", fullRooms.get(room_number).board)
+    socket.on("get board", async () => {
+        console.log("room", current_room);
+        socket.emit("board", current_room.board);
     });
     socket.on("create room", async (room_number) => {
         current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number);
@@ -253,15 +269,16 @@ io.on("connection", (socket) => {
         else {
             console.log("time", time);
             const result = logique(current_room.board, position, type, time);
+            console.log("the result of the logic is :", result);
             if (result == Moves.EatLeft || result == Moves.EatRight || result == Moves.MoveToEmptySpot) {
                 updateBoard(current_room.board, position, type);
                 io.to(current_room.number.toString()).emit("update piece", position, type, time);
                 current_room.turn = type == 0 ? 0 : 1;
-                io.to(current_room.number.toString()).except(socket.id).emit("U're Turn");
+                io.to(current_room.number.toString()).except(socket.id).emit("turn");
             }
             else {
                 current_room.turn = type == 0 ? 0 : 1;
-                io.to(current_room.number.toString()).except(socket.id).emit("U're Turn");
+                io.to(current_room.number.toString()).except(socket.id).emit("turn");
             }
         }
     });
