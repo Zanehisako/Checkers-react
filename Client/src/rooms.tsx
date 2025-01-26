@@ -5,8 +5,14 @@ import GlowButton from "./glowbutton";
 
 export function Rooms() {
   const socket = useSocket();
-  const [emptyRooms, setEmptyRooms] = useState<number[]>([])
-  const [fullRooms, setFullRooms] = useState<number[]>([])
+  const [emptyRooms, setEmptyRooms] = useState<number[]>(() => {
+    const saved = sessionStorage.getItem('emptyRoomsState');
+    return saved ? JSON.parse(saved) : [];
+  })
+  const [fullRooms, setFullRooms] = useState<number[]>(() => {
+    const saved = sessionStorage.getItem('fullRoomsState');
+    return saved ? JSON.parse(saved) : [];
+  })
   const [isConnected, setIsConnected] = useState(false);
   const navigate = useNavigate();
 
@@ -55,6 +61,8 @@ export function Rooms() {
   const onNavigate = (room: number) => {
     console.log('navigateing',)
     socket.emit("join room as spectator", room)
+    sessionStorage.setItem('emptyRoomsState', JSON.stringify(emptyRooms));
+    sessionStorage.setItem('fullRoomsState', JSON.stringify(fullRooms));
     navigate(`/Game/${room}`)
   }
   return (<div className="bg-gray-900 min-h-screen flex items-center justify-evenly text-white">
