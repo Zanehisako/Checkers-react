@@ -7,35 +7,55 @@ sio = socketio.Client()
 move = 0
 choise_room = 0
 room_number = 0
-player_type = 0
+player_type = 1
 
 black_moves = [
-    # Black piece 42 moves (starts at x:2, y:5)
-    {'index': 42, 'x': 3, 'y': 4,'king':False},  # First diagonal move
-    {'index': 42, 'x': 4, 'y': 3,'king':False},  # Advances further
-    {'index': 42, 'x': 2, 'y': 1,'king':False},  # Captures white piece
-    # Black piece 44 moves (star,'king':Falsets at x:4, y:5)
-    {'index': 44, 'x': 3, 'y': 4,'king':False},  # Moves to support
-    {'index': 44, 'x': 2, 'y': 3,'king':False},  # Continues advance
-    {'index': 44, 'x': 0, 'y': 1,'king':False},  # Captures white piece
-    # Black piece 51 moves (star,'king':Falsets at x:3, y:6)
-    {'index': 51, 'x': 4, 'y': 5,'king':False},  # Moves forward
-    {'index': 51, 'x': 5, 'y': 4,'king':False},  # Sets up for capture
-    {'index': 51, 'x': 3, 'y': 2,'king':False}   # Makes a capture
+    # Black 42 (x=4, y=5) captures white 21 (x=5, y=2)
+    {"index": 42, "x": 5, "y": 4, "king": False},  # Jump over white 21 (x=5, y=2)
+    {"index": 42, "x": 7, "y": 2, "king": False},  # Jump over white 23 (x=7, y=2)
+    {"index": 42, "x": 5, "y": 0, "king": True},   # King promotion
+
+    # Black 40 (x=0, y=5) captures white 17 (x=1, y=2)
+    {"index": 40, "x": 1, "y": 4, "king": False},  # Jump over white 17 (x=1, y=2)
+    {"index": 40, "x": 3, "y": 2, "king": False},  # Jump over white 19 (x=3, y=2)
+    {"index": 40, "x": 5, "y": 0, "king": True},   # King promotion
+
+    # Black 45 (x=3, y=6) captures white 12 (x=4, y=1)
+    {"index": 45, "x": 4, "y": 5, "king": False},  # Jump over white 12 (x=4, y=1)
+    {"index": 45, "x": 6, "y": 3, "king": False},  # Jump over white 14 (x=6, y=1)
+    {"index": 45, "x": 4, "y": 1, "king": True},   # King promotion
+
+    # Black 42 (now king) captures white 10 (x=2, y=1)
+    {"index": 42, "x": 6, "y": 1, "king": True},   # Jump over white 10 (x=2, y=1)
+
+    # Black 40 (now king) captures white 8 (x=0, y=1)
+    {"index": 40, "x": 2, "y": 1, "king": True},   # Jump over white 8 (x=0, y=1)
+
+    # Black 45 (now king) captures white 1 (x=1, y=0)
+    {"index": 45, "x": 0, "y": 3, "king": True},   # Jump over white 1 (x=1, y=0)
+
+    # Black 45 captures white 3 (x=3, y=0)
+    {"index": 45, "x": 2, "y": 5, "king": True},   # Jump over white 3 (x=3, y=0)
+
+    # Black 42 captures white 5 (x=5, y=0)
+    {"index": 42, "x": 3, "y": 4, "king": True},   # Jump over white 5 (x=5, y=0)
+
+    # Black 40 captures white 7 (x=7, y=0)
+    {"index": 40, "x": 7, "y": 6, "king": True},   # Jump over white 7 (x=7, y=0)
 ]
-white_moves = [                 
-    # White piece 17 moves (star,'king':Falsets at x:1, y:2)
-    {'index': 17, 'x': 2, 'y': 3,'king':False},  # Tries to block
-    {'index': 17, 'x': 3, 'y': 4,'king':False},  # Moves away from threat
-    # White piece 19 moves (star,'king':Falsets at x:3, y:2)
-    {'index': 19, 'x': 4, 'y': 3,'king':False},  # Defensive move
-    {'index': 19, 'x': 5, 'y': 4,'king':False},  # Tries to escape
-    # White piece 12 moves (star,'king':Falsets at x:4, y:1)
-    {'index': 12, 'x': 3, 'y': 2,'king':False},  # Repositions
-    {'index': 12, 'x': 2, 'y': 3,'king':False},  # Defensive stance
-    # White piece 21 moves (star,'king':Falsets at x:5, y:2)
-    {'index': 21, 'x': 4, 'y': 3,'king':False},  # Support move
-    {'index': 21, 'x': 3, 'y': 4,'king':False}   # Final defensive position
+
+white_moves = [
+    # Move white 17 (x=1, y=2) to (2, 3)
+    {"index": 17, "x": 2, "y": 3, "king": False},
+
+    # Move white 19 (x=3, y=2) to (4, 3)
+    {"index": 19, "x": 4, "y": 3, "king": False},
+
+    # Move white 21 (x=5, y=2) to (6, 3)
+    {"index": 21, "x": 6, "y": 3, "king": False},
+
+    # Move white 23 (x=7, y=2) to (6, 1)
+    {"index": 23, "x": 6, "y": 1, "king": False},
 ]
 
 @sio.on("rooms")
@@ -97,8 +117,7 @@ match choise_room:
         player_or_spectator= int(input())
         match player_or_spectator:
             case 0:
-                print("------Play as :------\n0:Black\n1:White")
-                player_type= int(input())
+                player_type= 0
                 sio.emit("join room as player",room_number)
             case 1:
                 sio.emit("join room as spectator",room_number)

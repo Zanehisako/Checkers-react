@@ -24,7 +24,9 @@ enum Moves {
   MoveToEmptySpot,
   EatRight,
   EatLeft,
-  Upgrade,
+  MoveToEmptySpotUpgrade,
+  EatRightUpgrage,
+  EatLeftUpgrage,
 }
 
 const PORT = 3001;
@@ -79,104 +81,112 @@ const initboard = () => {
 };
 
 const logique = (boards: Position[][], pos: Position, type: number, time: number) => {
+  console.time("Logic took:")
   var result: Moves;
-  switch (type) {
-    case 0:
-      console.log("position black", pos);
-      const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
-      console.log("old_position_black", old_position_black)
-      if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
-        /*console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);*/
-        console.log("YOU SHALL NOT PASS!!")
-        console.log("old_position_black.y < pos.y || old_position_black.x === pos.x")
-        return result = Moves.None
-      }
-      if ((pos.x - old_position_black.x > 2 || old_position_black.x - pos.x > 2) && pos.king == false) {
-        console.log("YOU SHALL NOT PASS!!")
-        console.log("(pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false")
-        return result = Moves.None
-      }
-      if ((pos.y - old_position_black.y > 2 || old_position_black.y - pos.y > 2) && pos.king == false) {
-        console.log("YOU SHALL NOT PASS!!")
-        return result = Moves.None
-      }
-      if (
-        !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
-      ) {
-        console.log("spot is empty");
+  try {
+    switch (type) {
+      case 0:
+        console.log('board', boards[0])
+        console.log("position black", pos);
+        const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
+        console.log("old_position_black", old_position_black)
+        if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
+          /*console.log("boards[0] posti", boards[0]);
+          console.log("boards[1] posti", boards[1]);*/
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("old_position_black.y < pos.y || old_position_black.x === pos.x")
+          return result = Moves.None
+        }
+        if ((pos.x - old_position_black.x > 2 || old_position_black.x - pos.x > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("(pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false")
+          return result = Moves.None
+        }
+        if ((pos.y - old_position_black.y > 2 || old_position_black.y - pos.y > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          return result = Moves.None
+        }
         if (
-          boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
+          !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
         ) {
-          console.log("EatRight");
-          result = Moves.EatRight;
-        }
-        else if (
-          boards[1].some((position) => position.x + 1 === pos.x && position.y + 1 === pos.y)
-        ) {
-          console.log("EatLeft");
-          return Moves.EatLeft;
-        } else {
-          result = Moves.MoveToEmptySpot;
-        }
+          console.log("spot is empty");
+          if (
+            boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
+          ) {
+            console.log("EatRight");
+            if (pos.y == 0) {
+              return result = Moves.EatRightUpgrage
 
-      }
-      else {
-        /* console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]); */
-        console.log("YOU SHALL NOT PASS!!")
-        result = Moves.None;
-      }
-      break;
-    case 1:
-      console.log("position white", pos);
-      const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
-      console.log("old_position_white", old_position_white)
-      if (old_position_white.y > pos.y || old_position_white.x === pos.x) {
-        /*console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]);*/
-        console.log("YOU SHALL NOT PASS!!")
-        console.log("old_position_white.y < pos.y || old_position_white.x === pos.x")
-        return result = Moves.None
-      }
-      if ((pos.x - old_position_white.x > 2 || old_position_white.x - pos.x > 2) && pos.king == false) {
-        console.log("YOU SHALL NOT PASS!!")
-        console.log("(pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false")
-        return result = Moves.None
-      }
-      if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
-        console.log("YOU SHALL NOT PASS!!")
-        return result = Moves.None
-      }
-      if (
-        !boards[0].some((position) => position.x == pos.x && position.y == pos.y)
-      ) {
-        console.log("spot is empty");
+            } else {
+              return result = Moves.EatRight;
+            }
+          }
+          else if (
+            boards[1].some((position) => position.x + 1 === pos.x && position.y + 1 === pos.y)
+          ) {
+            console.log("EatLeft");
+            if (pos.y == 0) {
+              return Moves.EatLeftUpgrage
+            } else {
+              return Moves.EatLeft;
+            }
+
+          } else {
+            return result = Moves.MoveToEmptySpot;
+          }
+
+        }
+        else {
+          console.log("YOU SHALL NOT PASS!!")
+          return result = Moves.None;
+        }
+      case 1:
+        console.log('board', boards[1])
+        console.log("position white", pos);
+        const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
+        console.log("old_position_white", old_position_white)
+        if (old_position_white.y > pos.y || old_position_white.x === pos.x) {
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("old_position_white.y < pos.y || old_position_white.x === pos.x")
+          return result = Moves.None
+        }
+        if ((pos.x - old_position_white.x > 2 || old_position_white.x - pos.x > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("(pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false")
+          return result = Moves.None
+        }
+        if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          return result = Moves.None
+        }
         if (
-          boards[0].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)
+          !boards[0].some((position) => position.x == pos.x && position.y == pos.y)
         ) {
-          console.log("EatRight");
-          return Moves.EatRight;
-        }
-        else if (
-          boards[0].some((position) => position.x + 1 === pos.x && position.y - 1 === pos.y)
-        ) {
-          console.log("EatLeft");
-          result = Moves.EatLeft;
-        } else {
-          result = Moves.MoveToEmptySpot;
-        }
+          console.log("spot is empty");
+          if (
+            boards[0].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)
+          ) {
+            console.log("EatRight");
+            return Moves.EatRight;
+          }
+          else if (
+            boards[0].some((position) => position.x + 1 === pos.x && position.y - 1 === pos.y)
+          ) {
+            console.log("EatLeft");
+            return result = Moves.EatLeft;
+          } else {
+            return result = Moves.MoveToEmptySpot;
+          }
 
-      }
-      else {
-        /* console.log("boards[0] posti", boards[0]);
-        console.log("boards[1] posti", boards[1]); */
-        console.log("YOU SHALL NOT PASS!!")
-        result = Moves.None;
-      }
-      break;
+        }
+        else {
+          console.log("YOU SHALL NOT PASS!!")
+          return result = Moves.None;
+        }
+    }
+  } finally {
+    console.timeEnd("Logic took:")
   }
-  return result
 };
 
 
@@ -244,7 +254,7 @@ io.on("connection", (socket) => {
         case 1:
           await socket.join(room.toString())
           current_room.size += 1
-          current_room.players.set(socket.id, 1)
+          current_room.players.set(socket.id, 0)
           current_room.board = initboard()
           fullRooms.set(room, current_room)
           emptyRooms.delete(room)
@@ -289,11 +299,11 @@ io.on("connection", (socket) => {
         size: 1,
         players: new Map<string, number>,
         spectators: [],
-        turn: 1,//1 cuz the first move is gonna be of type 0 
+        turn: 0,//0 cuz the first move is gonna be of type 1 white 
         board: undefined
       }
       current_room = room
-      room.players.set(socket.id, 0)
+      room.players.set(socket.id, 1)
       socket.emit("msg", "Room Created Successfully");
       emptyRooms.set(room_number, room)
       io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
