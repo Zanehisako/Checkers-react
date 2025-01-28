@@ -132,6 +132,7 @@ const logique = (boards, pos, type, time) => {
                 }
                 if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
                     console.log("YOU SHALL NOT PASS!!");
+                    console.log("(pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false");
                     return result = Moves.None;
                 }
                 if (!boards[0].some((position) => position.x == pos.x && position.y == pos.y)) {
@@ -149,6 +150,7 @@ const logique = (boards, pos, type, time) => {
                     }
                 }
                 else {
+                    console.log("there is another piece!!");
                     console.log("YOU SHALL NOT PASS!!");
                     return result = Moves.None;
                 }
@@ -159,6 +161,7 @@ const logique = (boards, pos, type, time) => {
     }
 };
 const updateBoard = (board, newPosition, type) => {
+    console.log("updating board");
     switch (type) {
         case 0:
             const indexBlack = board[0].findIndex(p => p.index === newPosition.index);

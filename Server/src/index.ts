@@ -157,6 +157,7 @@ const logique = (boards: Position[][], pos: Position, type: number, time: number
         }
         if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
           console.log("YOU SHALL NOT PASS!!")
+          console.log("(pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false")
           return result = Moves.None
         }
         if (
@@ -180,6 +181,7 @@ const logique = (boards: Position[][], pos: Position, type: number, time: number
 
         }
         else {
+          console.log("there is another piece!!")
           console.log("YOU SHALL NOT PASS!!")
           return result = Moves.None;
         }
@@ -191,6 +193,7 @@ const logique = (boards: Position[][], pos: Position, type: number, time: number
 
 
 const updateBoard = (board: Position[][], newPosition: Position, type: number) => {
+  console.log("updating board")
   switch (type) {
     case 0:
       const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
@@ -255,7 +258,6 @@ io.on("connection", (socket) => {
           await socket.join(room.toString())
           current_room.size += 1
           current_room.players.set(socket.id, 0)
-          current_room.board = initboard()
           fullRooms.set(room, current_room)
           emptyRooms.delete(room)
           console.log("player joined room Successfully")
@@ -300,7 +302,7 @@ io.on("connection", (socket) => {
         players: new Map<string, number>,
         spectators: [],
         turn: 0,//0 cuz the first move is gonna be of type 1 white 
-        board: undefined
+        board: initboard()
       }
       current_room = room
       room.players.set(socket.id, 1)

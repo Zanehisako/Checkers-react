@@ -10,20 +10,20 @@ room_number = 0
 player_type = 1
 
 black_moves = [
-    # Black 42 (x=4, y=5) captures white 21 (x=5, y=2)
-    {"index": 42, "x": 5, "y": 4, "king": False},  # Jump over white 21 (x=5, y=2)
-    {"index": 42, "x": 7, "y": 2, "king": False},  # Jump over white 23 (x=7, y=2)
+    # Black 42 (x=2, y=5) captures white 21 (x=5, y=2)
+    {"index": 42, "x": 4, "y": 3, "king": False},  # Jump over white 21 (x=5, y=2)
+    {"index": 42, "x": 6, "y": 1, "king": False},  # Jump over white 23 (x=7, y=2)
     {"index": 42, "x": 5, "y": 0, "king": True},   # King promotion
 
     # Black 40 (x=0, y=5) captures white 17 (x=1, y=2)
-    {"index": 40, "x": 1, "y": 4, "king": False},  # Jump over white 17 (x=1, y=2)
-    {"index": 40, "x": 3, "y": 2, "king": False},  # Jump over white 19 (x=3, y=2)
+    {"index": 40, "x": 2, "y": 3, "king": False},  # Jump over white 17 (x=1, y=2)
+    {"index": 40, "x": 4, "y": 1, "king": False},  # Jump over white 19 (x=3, y=2)
     {"index": 40, "x": 5, "y": 0, "king": True},   # King promotion
 
-    # Black 45 (x=3, y=6) captures white 12 (x=4, y=1)
-    {"index": 45, "x": 4, "y": 5, "king": False},  # Jump over white 12 (x=4, y=1)
-    {"index": 45, "x": 6, "y": 3, "king": False},  # Jump over white 14 (x=6, y=1)
-    {"index": 45, "x": 4, "y": 1, "king": True},   # King promotion
+    # Black 51 (x=3, y=6) captures white 12 (x=4, y=1)
+    {"index": 51, "x": 4, "y": 5, "king": False},  # Jump over white 12 (x=4, y=1)
+    {"index": 51, "x": 6, "y": 3, "king": False},  # Jump over white 14 (x=6, y=1)
+    {"index": 51, "x": 4, "y": 1, "king": True},   # King promotion
 
     # Black 42 (now king) captures white 10 (x=2, y=1)
     {"index": 42, "x": 6, "y": 1, "king": True},   # Jump over white 10 (x=2, y=1)
@@ -31,11 +31,11 @@ black_moves = [
     # Black 40 (now king) captures white 8 (x=0, y=1)
     {"index": 40, "x": 2, "y": 1, "king": True},   # Jump over white 8 (x=0, y=1)
 
-    # Black 45 (now king) captures white 1 (x=1, y=0)
-    {"index": 45, "x": 0, "y": 3, "king": True},   # Jump over white 1 (x=1, y=0)
+    # Black 51 (now king) captures white 1 (x=1, y=0)
+    {"index": 51, "x": 0, "y": 3, "king": True},   # Jump over white 1 (x=1, y=0)
 
-    # Black 45 captures white 3 (x=3, y=0)
-    {"index": 45, "x": 2, "y": 5, "king": True},   # Jump over white 3 (x=3, y=0)
+    # Black 51 captures white 3 (x=3, y=0)
+    {"index": 51, "x": 2, "y": 5, "king": True},   # Jump over white 3 (x=3, y=0)
 
     # Black 42 captures white 5 (x=5, y=0)
     {"index": 42, "x": 3, "y": 4, "king": True},   # Jump over white 5 (x=5, y=0)
@@ -70,6 +70,7 @@ def handleMsg(msg):
 @sio.on("turn")
 def turn():
     print("my turn bitch")
+    time.sleep(5)
     global move
     match player_type:
         case 0:
