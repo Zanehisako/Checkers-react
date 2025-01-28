@@ -265,6 +265,7 @@ io.on("connection", (socket) => {
           io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
           console.log("Room", room.toString())
           io.to(room.toString()).except(socket.id).emit("turn")
+          io.to(room.toString()).except(socket.id).emit("Player Joined", socket.id)
           break;
 
         default:

@@ -214,7 +214,6 @@ io.on("connection", (socket) => {
                     await socket.join(room.toString());
                     current_room.size += 1;
                     current_room.players.set(socket.id, 0);
-                    current_room.board = initboard();
                     fullRooms.set(room, current_room);
                     emptyRooms.delete(room);
                     console.log("player joined room Successfully");
@@ -222,6 +221,7 @@ io.on("connection", (socket) => {
                     io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
                     console.log("Room", room.toString());
                     io.to(room.toString()).except(socket.id).emit("turn");
+                    io.to(room.toString()).except(socket.id).emit("Player Joined", socket.id);
                     break;
                 default:
                     socket.emit("msg", "Room is full ");
@@ -257,7 +257,7 @@ io.on("connection", (socket) => {
                 players: new Map,
                 spectators: [],
                 turn: 0, //0 cuz the first move is gonna be of type 1 white 
-                board: undefined
+                board: initboard()
             };
             current_room = room;
             room.players.set(socket.id, 1);
