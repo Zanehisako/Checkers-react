@@ -2,24 +2,22 @@ import React, { useEffect, useState } from "react";
 import { useSocket } from "./socketcontext";
 
 interface PieceProps {
-  index: number;
+  index: string;
   SelectedIndex: number[];
   type: number;
   source: string;
   x: number;
   y: number;
   onSelect: React.Dispatch<React.SetStateAction<number[]>>;
-  onMove: (position: Position, type: number) => void;
+  onMove: (key: string, position: Position, type: number) => void;
 }
 
 
 export function Piece({
   index,
-  type,
   source,
   x,
   y,
-  onSelect,
 }: PieceProps) {
   const socket = useSocket();
   const [position_x, setX] = useState(x);
@@ -27,9 +25,9 @@ export function Piece({
   const [new_index,] = useState(index);
 
   useEffect(() => {
-    socket.on("update piece", (newPos: Position) => {
+    socket.on("update piece", (newPos: Position, key) => {
       console.log("recived new pos: ,");
-      if (newPos.index === index) {
+      if (key === index) {
         setX(newPos.x);
         setY(newPos.y);
       }
@@ -48,13 +46,6 @@ export function Piece({
         transform: `translate(${position_x * 64}px,${position_y * 64}px)`, //this is the position of the piece
       }}
       alt="piece"
-      onClick={() =>
-        onSelect(
-          type === 0
-            ? [new_index - 7, new_index - 9]
-            : [new_index + 7, new_index + 9],
-        )
-      }
     />
   );
 }

@@ -4,9 +4,9 @@ import { Cell } from "./cell";
 import { useSocket } from "./socketcontext";
 
 interface Position {
-  index: number;
   x: number;
   y: number;
+  king: boolean
 }
 enum types {
   Black,
@@ -15,10 +15,10 @@ enum types {
 
 interface BoardProp {
   type: types;
-  positions: Position[];
+  positions: Map<string, Position>;
   cellIndex: number[];
   SetCell: React.Dispatch<React.SetStateAction<number[]>>;
-  move: (position: Position, type: number) => void;
+  move: (key: string, position: Position, type: number) => void;
 }
 
 export function Board({
@@ -30,9 +30,10 @@ export function Board({
 }: BoardProp) {
 
   const socket = useSocket();
-  const [positions_state, SetPosition] = useState<Position[]>(positions);
+  const [positions_state, SetPosition] = useState<Position[]>(Array.from(positions.values()));
   const [pieces, SetPieces] = useState<JSX.Element[]>(() => {
     var pieces: JSX.Element[] = [];
+    const keys = Array.from(positions.keys())
     for (let index = 0; index < positions_state.length; index++) {
       pieces.push(
         <Piece
@@ -44,7 +45,7 @@ export function Board({
               ? "/pieces/black piece.png"
               : "/pieces/white piece.png"
           }
-          index={positions_state[index].index}
+          index={keys[index]}
           x={positions_state[index].x}
           y={positions_state[index].y}
           onMove={move}
@@ -55,19 +56,20 @@ export function Board({
     return pieces;
   });
   useEffect(() => {
-    socket.on("update piece", (position: Position) => {
+    socket.on("update piece", (key, position: Position) => {
       SetPieces((prev) => {
         const index = prev.findIndex(
-          (item) => item.props.index === position.index,
+          (item) => item.props.index === key,
         );
         console.log("index", index);
         const new_Pieces = prev.map((item) => {
-          if (item.props.index === position.index) {
+          if (item.props.index === key) {
             // Update the properties directly
             return {
               ...item,
               props: {
                 ...item.props,
+                index: position.x.toString() + position.y.toString(),
                 x: position.x,
                 y: position.y,
               },
@@ -119,14 +121,14 @@ export function Board({
 
 export function MainBoard() {
   const [isLoading, setIsLoading] = useState(true);
-  const [blackPieces, setBlackPieces] = useState<Position[]>(getInitialBlackPositions());
-  const [whitePieces, setWhitePieces] = useState<Position[]>(getInitialWhitePositions());
+  const [blackPieces, setBlackPieces] = useState<Map<string, Position>>(getInitialBlackPositions());
+  const [whitePieces, setWhitePieces] = useState<Map<string, Position>>(getInitialWhitePositions());
   const [selectedCell, setSelectedCell] = useState([0, 0]);
   const socket = useSocket();
   const boardSize = 8;
 
   useEffect(() => {
-    const handleBoardUpdate = (boards: Position[][]) => {
+    const handleBoardUpdate = (boards: Map<string, Position>[]) => {
       setBlackPieces(boards[0]);
       setWhitePieces(boards[1]);
       setIsLoading(false);
@@ -140,8 +142,8 @@ export function MainBoard() {
     };
   }, [socket]);
 
-  const move = (position: Position, type: types) => {
-    socket.emit("move", { position, type });
+  const move = (key: string, position: Position, type: types) => {
+    socket.emit("move", { key, position, type });
   };
 
   if (isLoading) {
@@ -170,36 +172,62 @@ export function MainBoard() {
 }
 
 // Default chess starting positions using your Position interface
-function getInitialBlackPositions(): Position[] {
-  return [
-    // Pawns (y=1)
-    ...Array(8).fill(0).map((_, x) => ({ x, y: 1, index: x + 1 * 8 })),
-    // Other pieces (y=0)
-    { x: 0, y: 0, index: 0 },
-    { x: 7, y: 0, index: 7 },
-    { x: 1, y: 0, index: 1 },
-    { x: 6, y: 0, index: 6 },
-    { x: 2, y: 0, index: 2 },
-    { x: 5, y: 0, index: 5 },
-    { x: 3, y: 0, index: 3 },
-    { x: 4, y: 0, index: 4 },
+function getInitialBlackPositions(): Map<string, Position> {
+  const positionMap = new Map<string, Position>();
+
+  // Pawns (y=1)
+  for (let x = 0; x < 8; x++) {
+    const index = `${x}1`; // Index is "x1" (e.g., "01", "11", ..., "71")
+    positionMap.set(index, { x, y: 1, king: false });
+  }
+
+  // Back row pieces (y=0)
+  const backRowBlack = [
+    { x: 0, y: 0, king: false },
+    { x: 7, y: 0, king: false },
+    { x: 1, y: 0, king: false },
+    { x: 6, y: 0, king: false },
+    { x: 2, y: 0, king: false },
+    { x: 5, y: 0, king: false },
+    { x: 3, y: 0, king: false },
+    { x: 4, y: 0, king: false },
   ];
+
+  backRowBlack.forEach(pos => {
+    const index = `${pos.x}${pos.y}`; // Index is "xy" (e.g., "00", "70", etc.)
+    positionMap.set(index, pos);
+  });
+
+  return positionMap;
 }
 
-function getInitialWhitePositions(): Position[] {
-  return [
-    // Pawns (y=6)
-    ...Array(8).fill(0).map((_, x) => ({ x, y: 6, index: x + 6 * 8 })),
-    // Other pieces (y=7)
-    { x: 0, y: 7, index: 56 },
-    { x: 7, y: 7, index: 63 },
-    { x: 1, y: 7, index: 57 },
-    { x: 6, y: 7, index: 62 },
-    { x: 2, y: 7, index: 58 },
-    { x: 5, y: 7, index: 61 },
-    { x: 3, y: 7, index: 59 },
-    { x: 4, y: 7, index: 60 },
+function getInitialWhitePositions(): Map<string, Position> {
+  const positionMap = new Map<string, Position>();
+
+  // Pawns (y=6)
+  for (let x = 0; x < 8; x++) {
+    const index = `${x}6`; // Index is "x6" (e.g., "06", "16", ..., "76")
+    positionMap.set(index, { x, y: 6, king: false });
+  }
+
+  // Back row pieces (y=7)
+  const backRowWhite = [
+    { x: 0, y: 7, king: false },
+    { x: 7, y: 7, king: false },
+    { x: 1, y: 7, king: false },
+    { x: 6, y: 7, king: false },
+    { x: 2, y: 7, king: false },
+    { x: 5, y: 7, king: false },
+    { x: 3, y: 7, king: false },
+    { x: 4, y: 7, king: false },
   ];
+
+  backRowWhite.forEach(pos => {
+    const index = `${pos.x}${pos.y}`; // Index is "xy" (e.g., "07", "77", etc.)
+    positionMap.set(index, pos);
+  });
+
+  return positionMap;
 }
 
 function createCells(size: number) {

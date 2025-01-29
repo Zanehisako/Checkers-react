@@ -1,8 +1,8 @@
 declare global {
   interface Position {
-    index: number;
     x: number;
     y: number;
+    king: boolean
   }
 }
 export { }
