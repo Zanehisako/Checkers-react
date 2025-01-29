@@ -238,6 +238,30 @@ const modifyPosition = (boards: Position[][], newPosition: Position, type: numbe
 
 };
 
+const removePiece = (boards: Position[][], newPosition: Position, type: number) => {
+  switch (type) {
+    case 0:
+      const index_black = boards[0].findIndex(
+        (item) => item.index === newPosition.index,
+      );
+      console.log("before black board :", boards[0]);
+      boards[0].splice(index_black, 1);
+      console.log("new black board :", boards[0]);
+
+      break;
+
+    case 1:
+      const index_white = boards[1].findIndex(
+        (item) => item.index === newPosition.index,
+      );
+
+      boards[1].splice(index_white, 1);
+      console.log("new white board :", boards[1]);
+      break;
+  }
+
+};
+
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
   var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: undefined }
@@ -329,12 +353,29 @@ io.on("connection", (socket) => {
       console.log("time", time);
       const result = logique(current_room.board, position, type, time)
       console.log("the result of the logic is :", result)
-      if (result == Moves.EatLeft || result == Moves.EatRight || result == Moves.MoveToEmptySpot) {
+      if (result == Moves.EatLeft || result == Moves.EatRight) {
+        switch (result) {
+          case Moves.EatLeft:
+            removePiece(current_room.board, { ...position, x: position.x + 1, y: position.y + 1 }, type)
+            break;
+
+          case Moves.EatRight:
+            removePiece(current_room.board, { ...position, x: position.x - 1, y: position.y + 1 }, type)
+            break;
+        }
+        updateBoard(current_room.board, position, type)
+        io.to(current_room!.number.toString()).emit("remove piece", position, type, time)
+        io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+        current_room!.turn = type == 0 ? 0 : 1;
+        io.to(current_room!.number.toString()).except(socket.id).emit("turn")
+      } else if (result == Moves.MoveToEmptySpot) {
         updateBoard(current_room.board, position, type)
         io.to(current_room!.number.toString()).emit("update piece", position, type, time)
         current_room!.turn = type == 0 ? 0 : 1;
         io.to(current_room!.number.toString()).except(socket.id).emit("turn")
-      } else {
+
+      }
+      else {
         current_room!.turn = type == 0 ? 0 : 1;
         io.to(current_room!.number.toString()).except(socket.id).emit("turn")
       }

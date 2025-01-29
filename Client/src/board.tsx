@@ -1,7 +1,6 @@
 import React, { JSX, useEffect, useState } from "react";
 import { Piece } from "./piece";
 import { Cell } from "./cell";
-import io from "socket.io-client";
 import { useSocket } from "./socketcontext";
 
 interface Position {
@@ -176,14 +175,14 @@ function getInitialBlackPositions(): Position[] {
     // Pawns (y=1)
     ...Array(8).fill(0).map((_, x) => ({ x, y: 1, index: x + 1 * 8 })),
     // Other pieces (y=0)
-    { x: 0, y: 0, index: 0 },   // Rook
-    { x: 7, y: 0, index: 7 },   // Rook
-    { x: 1, y: 0, index: 1 },   // Knight
-    { x: 6, y: 0, index: 6 },   // Knight
-    { x: 2, y: 0, index: 2 },   // Bishop
-    { x: 5, y: 0, index: 5 },   // Bishop
-    { x: 3, y: 0, index: 3 },   // Queen
-    { x: 4, y: 0, index: 4 },   // King
+    { x: 0, y: 0, index: 0 },
+    { x: 7, y: 0, index: 7 },
+    { x: 1, y: 0, index: 1 },
+    { x: 6, y: 0, index: 6 },
+    { x: 2, y: 0, index: 2 },
+    { x: 5, y: 0, index: 5 },
+    { x: 3, y: 0, index: 3 },
+    { x: 4, y: 0, index: 4 },
   ];
 }
 
@@ -192,14 +191,14 @@ function getInitialWhitePositions(): Position[] {
     // Pawns (y=6)
     ...Array(8).fill(0).map((_, x) => ({ x, y: 6, index: x + 6 * 8 })),
     // Other pieces (y=7)
-    { x: 0, y: 7, index: 56 },  // Rook
-    { x: 7, y: 7, index: 63 },  // Rook
-    { x: 1, y: 7, index: 57 },  // Knight
-    { x: 6, y: 7, index: 62 },  // Knight
-    { x: 2, y: 7, index: 58 },  // Bishop
-    { x: 5, y: 7, index: 61 },  // Bishop
-    { x: 3, y: 7, index: 59 },  // Queen
-    { x: 4, y: 7, index: 60 },  // King
+    { x: 0, y: 7, index: 56 },
+    { x: 7, y: 7, index: 63 },
+    { x: 1, y: 7, index: 57 },
+    { x: 6, y: 7, index: 62 },
+    { x: 2, y: 7, index: 58 },
+    { x: 5, y: 7, index: 61 },
+    { x: 3, y: 7, index: 59 },
+    { x: 4, y: 7, index: 60 },
   ];
 }
 
