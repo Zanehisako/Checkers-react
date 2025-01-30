@@ -1,6 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { Piece } from "./piece";
 import { Cell } from "./cell";
+import io from "socket.io-client";
 import { useSocket } from "./socketcontext";
 
 interface Position {
@@ -172,62 +173,36 @@ export function MainBoard() {
 }
 
 // Default chess starting positions using your Position interface
-function getInitialBlackPositions(): Map<string, Position> {
-  const positionMap = new Map<string, Position>();
-
-  // Pawns (y=1)
-  for (let x = 0; x < 8; x++) {
-    const index = `${x}1`; // Index is "x1" (e.g., "01", "11", ..., "71")
-    positionMap.set(index, { x, y: 1, king: false });
-  }
-
-  // Back row pieces (y=0)
-  const backRowBlack = [
-    { x: 0, y: 0, king: false },
-    { x: 7, y: 0, king: false },
-    { x: 1, y: 0, king: false },
-    { x: 6, y: 0, king: false },
-    { x: 2, y: 0, king: false },
-    { x: 5, y: 0, king: false },
-    { x: 3, y: 0, king: false },
-    { x: 4, y: 0, king: false },
+function getInitialBlackPositions(): Position[] {
+  return [
+    // Pawns (y=1)
+    ...Array(8).fill(0).map((_, x) => ({ x, y: 1, index: x + 1 * 8 })),
+    // Other pieces (y=0)
+    { x: 0, y: 0, index: 0 },   // Rook
+    { x: 7, y: 0, index: 7 },   // Rook
+    { x: 1, y: 0, index: 1 },   // Knight
+    { x: 6, y: 0, index: 6 },   // Knight
+    { x: 2, y: 0, index: 2 },   // Bishop
+    { x: 5, y: 0, index: 5 },   // Bishop
+    { x: 3, y: 0, index: 3 },   // Queen
+    { x: 4, y: 0, index: 4 },   // King
   ];
-
-  backRowBlack.forEach(pos => {
-    const index = `${pos.x}${pos.y}`; // Index is "xy" (e.g., "00", "70", etc.)
-    positionMap.set(index, pos);
-  });
-
-  return positionMap;
 }
 
-function getInitialWhitePositions(): Map<string, Position> {
-  const positionMap = new Map<string, Position>();
-
-  // Pawns (y=6)
-  for (let x = 0; x < 8; x++) {
-    const index = `${x}6`; // Index is "x6" (e.g., "06", "16", ..., "76")
-    positionMap.set(index, { x, y: 6, king: false });
-  }
-
-  // Back row pieces (y=7)
-  const backRowWhite = [
-    { x: 0, y: 7, king: false },
-    { x: 7, y: 7, king: false },
-    { x: 1, y: 7, king: false },
-    { x: 6, y: 7, king: false },
-    { x: 2, y: 7, king: false },
-    { x: 5, y: 7, king: false },
-    { x: 3, y: 7, king: false },
-    { x: 4, y: 7, king: false },
+function getInitialWhitePositions(): Position[] {
+  return [
+    // Pawns (y=6)
+    ...Array(8).fill(0).map((_, x) => ({ x, y: 6, index: x + 6 * 8 })),
+    // Other pieces (y=7)
+    { x: 0, y: 7, index: 56 },  // Rook
+    { x: 7, y: 7, index: 63 },  // Rook
+    { x: 1, y: 7, index: 57 },  // Knight
+    { x: 6, y: 7, index: 62 },  // Knight
+    { x: 2, y: 7, index: 58 },  // Bishop
+    { x: 5, y: 7, index: 61 },  // Bishop
+    { x: 3, y: 7, index: 59 },  // Queen
+    { x: 4, y: 7, index: 60 },  // King
   ];
-
-  backRowWhite.forEach(pos => {
-    const index = `${pos.x}${pos.y}`; // Index is "xy" (e.g., "07", "77", etc.)
-    positionMap.set(index, pos);
-  });
-
-  return positionMap;
 }
 
 function createCells(size: number) {
