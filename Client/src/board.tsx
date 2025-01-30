@@ -5,9 +5,9 @@ import io from "socket.io-client";
 import { useSocket } from "./socketcontext";
 
 interface Position {
+  index: number;
   x: number;
   y: number;
-  king: boolean
 }
 enum types {
   Black,
@@ -16,10 +16,10 @@ enum types {
 
 interface BoardProp {
   type: types;
-  positions: Map<string, Position>;
+  positions: Position[];
   cellIndex: number[];
   SetCell: React.Dispatch<React.SetStateAction<number[]>>;
-  move: (key: string, position: Position, type: number) => void;
+  move: (position: Position, type: number) => void;
 }
 
 export function Board({
@@ -31,10 +31,9 @@ export function Board({
 }: BoardProp) {
 
   const socket = useSocket();
-  const [positions_state, SetPosition] = useState<Position[]>(Array.from(positions.values()));
+  const [positions_state, SetPosition] = useState<Position[]>(positions);
   const [pieces, SetPieces] = useState<JSX.Element[]>(() => {
     var pieces: JSX.Element[] = [];
-    const keys = Array.from(positions.keys())
     for (let index = 0; index < positions_state.length; index++) {
       pieces.push(
         <Piece
@@ -46,7 +45,7 @@ export function Board({
               ? "/pieces/black piece.png"
               : "/pieces/white piece.png"
           }
-          index={keys[index]}
+          index={positions_state[index].index}
           x={positions_state[index].x}
           y={positions_state[index].y}
           onMove={move}
@@ -57,20 +56,19 @@ export function Board({
     return pieces;
   });
   useEffect(() => {
-    socket.on("update piece", (key, position: Position) => {
+    socket.on("update piece", (position: Position) => {
       SetPieces((prev) => {
         const index = prev.findIndex(
-          (item) => item.props.index === key,
+          (item) => item.props.index === position.index,
         );
         console.log("index", index);
         const new_Pieces = prev.map((item) => {
-          if (item.props.index === key) {
+          if (item.props.index === position.index) {
             // Update the properties directly
             return {
               ...item,
               props: {
                 ...item.props,
-                index: position.x.toString() + position.y.toString(),
                 x: position.x,
                 y: position.y,
               },
@@ -122,14 +120,14 @@ export function Board({
 
 export function MainBoard() {
   const [isLoading, setIsLoading] = useState(true);
-  const [blackPieces, setBlackPieces] = useState<Map<string, Position>>(getInitialBlackPositions());
-  const [whitePieces, setWhitePieces] = useState<Map<string, Position>>(getInitialWhitePositions());
+  const [blackPieces, setBlackPieces] = useState<Position[]>(getInitialBlackPositions());
+  const [whitePieces, setWhitePieces] = useState<Position[]>(getInitialWhitePositions());
   const [selectedCell, setSelectedCell] = useState([0, 0]);
   const socket = useSocket();
   const boardSize = 8;
 
   useEffect(() => {
-    const handleBoardUpdate = (boards: Map<string, Position>[]) => {
+    const handleBoardUpdate = (boards: Position[][]) => {
       setBlackPieces(boards[0]);
       setWhitePieces(boards[1]);
       setIsLoading(false);
@@ -143,8 +141,8 @@ export function MainBoard() {
     };
   }, [socket]);
 
-  const move = (key: string, position: Position, type: types) => {
-    socket.emit("move", { key, position, type });
+  const move = (position: Position, type: types) => {
+    socket.emit("move", { position, type });
   };
 
   if (isLoading) {
@@ -178,14 +176,14 @@ function getInitialBlackPositions(): Position[] {
     // Pawns (y=1)
     ...Array(8).fill(0).map((_, x) => ({ x, y: 1, index: x + 1 * 8 })),
     // Other pieces (y=0)
-    { x: 0, y: 0, index: 0 },   // Rook
-    { x: 7, y: 0, index: 7 },   // Rook
-    { x: 1, y: 0, index: 1 },   // Knight
-    { x: 6, y: 0, index: 6 },   // Knight
-    { x: 2, y: 0, index: 2 },   // Bishop
-    { x: 5, y: 0, index: 5 },   // Bishop
-    { x: 3, y: 0, index: 3 },   // Queen
-    { x: 4, y: 0, index: 4 },   // King
+    { x: 0, y: 0, index: 0 },
+    { x: 7, y: 0, index: 7 },
+    { x: 1, y: 0, index: 1 },
+    { x: 6, y: 0, index: 6 },
+    { x: 2, y: 0, index: 2 },
+    { x: 5, y: 0, index: 5 },
+    { x: 3, y: 0, index: 3 },
+    { x: 4, y: 0, index: 4 },
   ];
 }
 
@@ -194,14 +192,14 @@ function getInitialWhitePositions(): Position[] {
     // Pawns (y=6)
     ...Array(8).fill(0).map((_, x) => ({ x, y: 6, index: x + 6 * 8 })),
     // Other pieces (y=7)
-    { x: 0, y: 7, index: 56 },  // Rook
-    { x: 7, y: 7, index: 63 },  // Rook
-    { x: 1, y: 7, index: 57 },  // Knight
-    { x: 6, y: 7, index: 62 },  // Knight
-    { x: 2, y: 7, index: 58 },  // Bishop
-    { x: 5, y: 7, index: 61 },  // Bishop
-    { x: 3, y: 7, index: 59 },  // Queen
-    { x: 4, y: 7, index: 60 },  // King
+    { x: 0, y: 7, index: 56 },
+    { x: 7, y: 7, index: 63 },
+    { x: 1, y: 7, index: 57 },
+    { x: 6, y: 7, index: 62 },
+    { x: 2, y: 7, index: 58 },
+    { x: 5, y: 7, index: 61 },
+    { x: 3, y: 7, index: 59 },
+    { x: 4, y: 7, index: 60 },
   ];
 }
 
