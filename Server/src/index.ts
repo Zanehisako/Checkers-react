@@ -4,13 +4,14 @@ import http from "http"; // Import Node's HTTP module
 import { Server } from "socket.io"; // Import Socket.IO Server class
 
 interface Position {
+  index: number;
   x: number;
   y: number;
   king: boolean
 }
 
 interface Room {
-  board: Map<string, Position>[] | undefined,
+  board: Position[][] | undefined,
   number: number;
   players: Map<string, number>;
   size: number;
@@ -42,17 +43,19 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
+const board_size = 8;
 const emptyRooms = new Map<number, Room>()
 const fullRooms = new Map<number, Room>()
 
 const initboard = () => {
-  const black_pieces_pos = new Map<string, Position>;
-  const white_pieces_pos = new Map<string, Position>;
+  const black_pieces_pos: Position[] = [];
+  const white_pieces_pos: Position[] = [];
   for (let i = 0; i < 8; i++) {
     for (let j = 5; j < 8; j++) {
       if ((i + j) % 2 !== 0) {
-        const index = i.toString() + j.toString();
-        black_pieces_pos.set(index, {
+        const index = i + j * board_size;
+        black_pieces_pos.push({
+          index: index,
           x: i,
           y: j,
           king: false
@@ -64,8 +67,9 @@ const initboard = () => {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 3; j++) {
       if ((i + j) % 2 !== 0) {
-        const index = i.toString() + j.toString();
-        white_pieces_pos.set(index, {
+        const index = i + j * board_size;
+        white_pieces_pos.push({
+          index: index,
           x: i,
           y: j,
           king: false
@@ -76,130 +80,183 @@ const initboard = () => {
   return [black_pieces_pos, white_pieces_pos];
 };
 
-const logique = (key: string, boards: Map<string, Position>[], pos: Position, type: number, time: number) => {
-  console.time("Logic took:");
+const logique = (boards: Position[][], pos: Position, type: number, time: number) => {
+  console.time("Logic took:")
   var result: Moves;
   try {
     switch (type) {
-      case 0: {
-        console.log('black board', boards[0]);
+      case 0:
+        console.log('board', boards[0])
         console.log("position black", pos);
-        const old_position_black = boards[0].get(key)!;
-        console.log("old_position_black", old_position_black);
-
-        // Movement validation checks
+        const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
+        console.log("old_position_black", old_position_black)
         if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
-          console.log("YOU SHALL NOT PASS!! - Invalid direction or same column");
-          return result = Moves.None;
+          /*console.log("boards[0] posti", boards[0]);
+          console.log("boards[1] posti", boards[1]);*/
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("old_position_black.y < pos.y || old_position_black.x === pos.x")
+          return result = Moves.None
         }
-        if ((Math.abs(pos.x - old_position_black.x) > 2 || Math.abs(pos.y - old_position_black.y) > 2) && !pos.king) {
-          console.log("YOU SHALL NOT PASS!! - Move too far");
-          return result = Moves.None;
+        if ((pos.x - old_position_black.x > 2 || old_position_black.x - pos.x > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("(pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false")
+          return result = Moves.None
         }
-
-        // Check target position
-        const opponentPieces = Array.from(boards[1].values());
-        if (!opponentPieces.some(p => p.x === pos.x && p.y === pos.y)) {
+        if ((pos.y - old_position_black.y > 2 || old_position_black.y - pos.y > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          return result = Moves.None
+        }
+        if (
+          !boards[1].some((position) => position.x == pos.x && position.y == pos.y)
+        ) {
           console.log("spot is empty");
-
-          // Check possible captures
-          const hasRightPrey = opponentPieces.some(p =>
-            p.x === pos.x - 1 && p.y === pos.y + 1
-          );
-          const hasLeftPrey = opponentPieces.some(p =>
-            p.x === pos.x + 1 && p.y === pos.y + 1
-          );
-
-          if (hasRightPrey) {
+          if (
+            boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
+          ) {
             console.log("EatRight");
-            return pos.y === 0 ? Moves.EatRightUpgrage : Moves.EatRight;
+            if (pos.y == 0) {
+              return result = Moves.EatRightUpgrage
+
+            } else {
+              return result = Moves.EatRight;
+            }
           }
-          if (hasLeftPrey) {
+          else if (
+            boards[1].some((position) => position.x + 1 === pos.x && position.y + 1 === pos.y)
+          ) {
             console.log("EatLeft");
-            return pos.y === 0 ? Moves.EatLeftUpgrage : Moves.EatLeft;
+            if (pos.y == 0) {
+              return Moves.EatLeftUpgrage
+            } else {
+              return Moves.EatLeft;
+            }
+
+          } else {
+            return result = Moves.MoveToEmptySpot;
           }
-          return result = Moves.MoveToEmptySpot;
-        }
-        console.log("YOU SHALL NOT PASS!! - Occupied spot");
-        return result = Moves.None;
-      }
 
-      case 1: {
-        console.log('white board', boards[1]);
+        }
+        else {
+          console.log("YOU SHALL NOT PASS!!")
+          return result = Moves.None;
+        }
+      case 1:
+        console.log('board', boards[1])
         console.log("position white", pos);
-        const old_position_white = boards[1].get(key)!;
-        console.log("old_position_white", old_position_white);
-
-        // Movement validation checks
+        const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
+        console.log("old_position_white", old_position_white)
         if (old_position_white.y > pos.y || old_position_white.x === pos.x) {
-          console.log("YOU SHALL NOT PASS!! - Invalid direction or same column");
-          return result = Moves.None;
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("old_position_white.y < pos.y || old_position_white.x === pos.x")
+          return result = Moves.None
         }
-        if ((Math.abs(pos.x - old_position_white.x) > 2 || Math.abs(pos.y - old_position_white.y) > 2) && !pos.king) {
-          console.log("YOU SHALL NOT PASS!! - Move too far");
-          return result = Moves.None;
+        if ((pos.x - old_position_white.x > 2 || old_position_white.x - pos.x > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("(pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false")
+          return result = Moves.None
         }
-
-        // Check target position
-        const opponentPieces = Array.from(boards[0].values());
-        if (!opponentPieces.some(p => p.x === pos.x && p.y === pos.y)) {
+        if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
+          console.log("YOU SHALL NOT PASS!!")
+          console.log("(pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false")
+          return result = Moves.None
+        }
+        if (
+          !boards[0].some((position) => position.x == pos.x && position.y == pos.y)
+        ) {
           console.log("spot is empty");
-
-          // Check possible captures
-          const hasRightPrey = opponentPieces.some(p =>
-            p.x === pos.x - 1 && p.y === pos.y - 1
-          );
-          const hasLeftPrey = opponentPieces.some(p =>
-            p.x === pos.x + 1 && p.y === pos.y - 1
-          );
-
-          if (hasRightPrey) {
+          if (
+            boards[0].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)
+          ) {
             console.log("EatRight");
             return Moves.EatRight;
           }
-          if (hasLeftPrey) {
+          else if (
+            boards[0].some((position) => position.x + 1 === pos.x && position.y - 1 === pos.y)
+          ) {
             console.log("EatLeft");
             return result = Moves.EatLeft;
+          } else {
+            return result = Moves.MoveToEmptySpot;
           }
-          return result = Moves.MoveToEmptySpot;
+
         }
-        console.log("YOU SHALL NOT PASS!! - Occupied spot");
-        return result = Moves.None;
-      }
+        else {
+          console.log("there is another piece!!")
+          console.log("YOU SHALL NOT PASS!!")
+          return result = Moves.None;
+        }
     }
   } finally {
-    console.timeEnd("Logic took:");
+    console.timeEnd("Logic took:")
   }
 };
 
 
-const updateBoard = (key: string, board: Map<string, Position>[], newPosition: Position, type: number) => {
-  console.log("updating board");
+const updateBoard = (board: Position[][], newPosition: Position, type: number) => {
+  console.log("updating board")
   switch (type) {
     case 0:
-      if (board[0].has(key)) {
-        board[0].set(key, newPosition);
+      const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
+      if (indexBlack > -1) {
+        board[0][indexBlack] = newPosition; // ✅ Direct array update
       }
       break;
+
     case 1:
-      if (board[1].has(key)) {
-        board[1].set(key, newPosition);
+      const indexWhite = board[1].findIndex(p => p.index === newPosition.index);
+      if (indexWhite > -1) {
+        board[1][indexWhite] = newPosition; // ✅ Direct array update
       }
       break;
   }
 };
 
-const modifyPosition = (key: string, boards: Map<string, Position>[], newPosition: Position, type: number) => {
+const modifyPosition = (boards: Position[][], newPosition: Position, type: number) => {
   switch (type) {
     case 0:
-      console.log("position index:", key);
-      console.log("before black board:", boards[0]);
-      boards[0].set(key, newPosition);
-      console.log("new black board:", boards[0]);
+      const index_black = boards[0].findIndex(
+        (item) => item.index === newPosition.index,
+      );
+
+      console.log("index :", index_black);
+
+      console.log("before black board :", boards[0]);
+      boards[0][index_black] = newPosition;
+      console.log("new black board :", boards[0]);
+
       break;
+
     case 1:
-      boards[1].set(key, newPosition);
-      console.log("new white board:", boards[1]);
+      const index_white = boards[1].findIndex(
+        (item) => item.index === newPosition.index,
+      );
+
+      boards[1][index_white] = newPosition;
+      console.log("new white board :", boards[1]);
+      break;
+  }
+
+};
+
+const removePiece = (boards: Position[][], newPosition: Position, type: number) => {
+  switch (type) {
+    case 0:
+      const index_black = boards[0].findIndex(
+        (item) => item.index === newPosition.index,
+      );
+      console.log("before black board :", boards[0]);
+      boards[0].splice(index_black, 1);
+      console.log("new black board :", boards[0]);
+
+      break;
+
+    case 1:
+      const index_white = boards[1].findIndex(
+        (item) => item.index === newPosition.index,
+      );
+
+      boards[1].splice(index_white, 1);
+      console.log("new white board :", boards[1]);
       break;
   }
 
@@ -282,7 +339,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("move piece", async (key, position: Position, type: number, time: number) => {
+  socket.on("move piece", async (position: Position, type: number, time: number) => {
     //this make sure only players can send moves not spectators for example
     if (!current_room?.players.has(socket.id)) {
       return;
@@ -294,14 +351,31 @@ io.on("connection", (socket) => {
       return;
     } else {
       console.log("time", time);
-      const result = logique(key, current_room.board, position, type, time)
+      const result = logique(current_room.board, position, type, time)
       console.log("the result of the logic is :", result)
-      if (result == Moves.EatLeft || result == Moves.EatRight || result == Moves.MoveToEmptySpot) {
+      if (result == Moves.EatLeft || result == Moves.EatRight) {
+        switch (result) {
+          case Moves.EatLeft:
+            removePiece(current_room.board, { ...position, x: position.x + 1, y: position.y + 1 }, type)
+            break;
+
+          case Moves.EatRight:
+            removePiece(current_room.board, { ...position, x: position.x - 1, y: position.y + 1 }, type)
+            break;
+        }
+        updateBoard(current_room.board, position, type)
+        io.to(current_room!.number.toString()).emit("remove piece", position, type, time)
+        io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+        current_room!.turn = type == 0 ? 0 : 1;
+        io.to(current_room!.number.toString()).except(socket.id).emit("turn")
+      } else if (result == Moves.MoveToEmptySpot) {
         updateBoard(current_room.board, position, type)
         io.to(current_room!.number.toString()).emit("update piece", position, type, time)
         current_room!.turn = type == 0 ? 0 : 1;
         io.to(current_room!.number.toString()).except(socket.id).emit("turn")
-      } else {
+
+      }
+      else {
         current_room!.turn = type == 0 ? 0 : 1;
         io.to(current_room!.number.toString()).except(socket.id).emit("turn")
       }
