@@ -9,13 +9,9 @@ interface Position {
   x: number;
   y: number;
 }
-enum types {
-  Black,
-  White,
-}
 
 interface BoardProp {
-  type: types;
+  type: number;
   positions: Position[];
   cellIndex: number[];
   SetCell: React.Dispatch<React.SetStateAction<number[]>>;
@@ -39,9 +35,9 @@ export function Board({
         <Piece
           key={index}
           SelectedIndex={cellIndex}
-          type={type === types.Black ? 0 : 1}
+          type={type === 0 ? 0 : 1}
           source={
-            type == types.Black
+            type == 0
               ? "/pieces/black piece.png"
               : "/pieces/white piece.png"
           }
@@ -61,7 +57,7 @@ export function Board({
         const index = prev.findIndex(
           (item) => item.props.index === position.index,
         );
-        console.log("index", index);
+        console.log("updating piece index:", index);
         const new_Pieces = prev.map((item) => {
           if (item.props.index === position.index) {
             // Update the properties directly
@@ -69,6 +65,7 @@ export function Board({
               ...item,
               props: {
                 ...item.props,
+                index: `${position.x}${position.y}`,
                 x: position.x,
                 y: position.y,
               },
@@ -77,34 +74,23 @@ export function Board({
           // Return the unchanged item if the condition is not met
           return item;
         });
-        console.log("pieces length after", prev.length);
-        console.log("removed type", type);
         return new_Pieces!;
       });
-      console.log(pieces.length);
     });
     socket.on("remove piece", (position: Position, type_f: number) => {
       if (type === type_f) {
-        console.log("type ", type);
-        console.log("type_f ", type_f);
-        console.log("x", position.x);
-
         console.log("remove piece from ", type);
         SetPieces((prev) => {
-          console.log("pieces length before ", prev.length);
           const index = prev.findIndex(
             (item) =>
-              item.props.x === position.x && item.props.y === position.y,
+              item.props.index === position.index,
           );
-          console.log("index", index);
+          console.log("removing piece index", index);
           const new_Pieces = prev.filter(
             (_, index_prev) => index !== index_prev,
           );
-          console.log("pieces length after", prev.length);
-          console.log("removed type", type);
           return new_Pieces!;
         });
-        console.log(pieces.length);
       }
     });
     return () => {
@@ -141,7 +127,7 @@ export function MainBoard() {
     };
   }, [socket]);
 
-  const move = (position: Position, type: types) => {
+  const move = (position: Position, type: number) => {
     socket.emit("move", { position, type });
   };
 
@@ -153,14 +139,14 @@ export function MainBoard() {
     <div className="grid grid-cols-8 w-128 h-128 relative">
       {createCells(boardSize)}
       <Board
-        type={types.Black}
+        type={0}
         positions={blackPieces}
         cellIndex={selectedCell}
         SetCell={setSelectedCell}
         move={move}
       />
       <Board
-        type={types.White}
+        type={1}
         positions={whitePieces}
         cellIndex={selectedCell}
         SetCell={setSelectedCell}
