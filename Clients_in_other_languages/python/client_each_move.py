@@ -24,10 +24,10 @@ def turn():
     match player_type:
         case 0:
             position_details = list(map(int,input("Enter Position:\n").split()))
-            sio.emit("move piece",({"index":position_details[0],"x":position_details[1],"y":position_details[2],"king":False},player_type,random.randint(10)))
+            sio.emit("move piece",({"index":str(position_details[0]),"x":position_details[1],"y":position_details[2],"king":False},player_type,random.randint(10)))
         case 1:
             position_details = list(map(int,input("Enter Position:\n").split()))
-            sio.emit("move piece",({"index":position_details[0],"x":position_details[1],"y":position_details[2],"king":False},player_type,random.randint(10)))
+            sio.emit("move piece",({"index":str(position_details[0]),"x":position_details[1],"y":position_details[2],"king":False},player_type,random.randint(10)))
 
 @sio.event
 def connect():
