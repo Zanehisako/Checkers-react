@@ -200,6 +200,9 @@ const updateBoard = (board: Position[][], newPosition: Position, type: number) =
       const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
       if (indexBlack > -1) {
         board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+        if (board[0].length === 0) {
+          return "Game Over"
+        }
       }
       break;
 
@@ -207,6 +210,9 @@ const updateBoard = (board: Position[][], newPosition: Position, type: number) =
       const indexWhite = board[1].findIndex(p => p.index === newPosition.index);
       if (indexWhite > -1) {
         board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+        if (board[1].length === 0) {
+          return "Game Over"
+        }
       }
       break;
   }
@@ -330,7 +336,11 @@ io.on("connection", (socket) => {
       const result = logique(current_room.board, position, type)
       console.log("the result of the logic is :", result)
       if (result == Moves.EatLeft || result == Moves.EatRight) {
-        updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
+        const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
+        if (updateResult === "Game Over") {
+          io.to(current_room.number.toString()).emit("Game Over")
+          return
+        }
         current_room!.turn = type == 0 ? 0 : 1;
         switch (result) {
           case Moves.EatLeft:
