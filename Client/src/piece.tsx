@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSocket } from "./socketcontext";
 
 interface PieceProps {
-  index: number;
+  index: string;
   SelectedIndex: number[];
   type: number;
   source: string;
@@ -48,13 +48,6 @@ export function Piece({
         transform: `translate(${position_x * 64}px,${position_y * 64}px)`, //this is the position of the piece
       }}
       alt="piece"
-      onClick={() =>
-        onSelect(
-          type === 0
-            ? [new_index - 7, new_index - 9]
-            : [new_index + 7, new_index + 9],
-        )
-      }
     />
   );
 }

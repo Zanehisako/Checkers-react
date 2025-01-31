@@ -45,7 +45,7 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
 
     console.log('Registering move piece handler - socket is connected');
 
-    const handleMovePiece = (position: Position, type: number, time: number) => {
+    const handleMovePiece = (position: Position, type: number, _: number) => {
       console.log('Received move piece event:', position);
       if (piece_type === type) {
         setMessages(prevMessages => [...prevMessages, JSON.stringify(position)]);

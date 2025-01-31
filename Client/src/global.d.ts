@@ -1,6 +1,6 @@
 declare global {
   interface Position {
-    index: number;
+    index: string;
     x: number;
     y: number;
   }

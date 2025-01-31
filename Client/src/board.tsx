@@ -5,7 +5,7 @@ import io from "socket.io-client";
 import { useSocket } from "./socketcontext";
 
 interface Position {
-  index: number;
+  index: string;
   x: number;
   y: number;
 }
@@ -25,82 +25,29 @@ export function Board({
   SetCell,
   move,
 }: BoardProp) {
+  const [boardPositions, setBoardPositions] = useState<Position[]>(positions);
 
-  const socket = useSocket();
-  const [positions_state, SetPosition] = useState<Position[]>(positions);
-  const [pieces, SetPieces] = useState<JSX.Element[]>(() => {
-    var pieces: JSX.Element[] = [];
-    for (let index = 0; index < positions_state.length; index++) {
-      pieces.push(
+  useEffect(() => {
+    setBoardPositions(positions);
+  }, [positions]);
+
+  return (
+    <>
+      {boardPositions.map((position, index) => (
         <Piece
-          key={index}
+          key={`${type}-${position.index}-${position.x}-${position.y}`}
           SelectedIndex={cellIndex}
           type={type === 0 ? 0 : 1}
-          source={
-            type == 0
-              ? "/pieces/black piece.png"
-              : "/pieces/white piece.png"
-          }
-          index={positions_state[index].index}
-          x={positions_state[index].x}
-          y={positions_state[index].y}
+          source={type === 0 ? "/pieces/black piece.png" : "/pieces/white piece.png"}
+          index={position.index}
+          x={position.x}
+          y={position.y}
           onMove={move}
           onSelect={SetCell}
-        />,
-      );
-    }
-    return pieces;
-  });
-  useEffect(() => {
-    socket.on("update piece", (position: Position) => {
-      SetPieces((prev) => {
-        const index = prev.findIndex(
-          (item) => item.props.index === position.index,
-        );
-        console.log("updating piece index:", index);
-        const new_Pieces = prev.map((item) => {
-          if (item.props.index === position.index) {
-            // Update the properties directly
-            return {
-              ...item,
-              props: {
-                ...item.props,
-                index: `${position.x}${position.y}`,
-                x: position.x,
-                y: position.y,
-              },
-            };
-          }
-          // Return the unchanged item if the condition is not met
-          return item;
-        });
-        return new_Pieces!;
-      });
-    });
-    socket.on("remove piece", (position: Position, type_f: number) => {
-      if (type === type_f) {
-        console.log("remove piece from ", type);
-        SetPieces((prev) => {
-          const index = prev.findIndex(
-            (item) =>
-              item.props.index === position.index,
-          );
-          console.log("removing piece index", index);
-          const new_Pieces = prev.filter(
-            (_, index_prev) => index !== index_prev,
-          );
-          return new_Pieces!;
-        });
-      }
-    });
-    return () => {
-      socket.off("init");
-      socket.off("remove piece");
-    };
-  }, []);
-  console.log("positions_state", positions_state);
-
-  return pieces;
+        />
+      ))}
+    </>
+  );
 }
 
 
@@ -160,35 +107,42 @@ export function MainBoard() {
 function getInitialBlackPositions(): Position[] {
   return [
     // Pawns (y=1)
-    ...Array(8).fill(0).map((_, x) => ({ x, y: 1, index: x + 1 * 8 })),
+    ...Array(8).fill(0).map((_, x) => ({
+      x,
+      y: 1,
+      index: `${x}${1}`
+    })),
     // Other pieces (y=0)
-    { x: 0, y: 0, index: 0 },
-    { x: 7, y: 0, index: 7 },
-    { x: 1, y: 0, index: 1 },
-    { x: 6, y: 0, index: 6 },
-    { x: 2, y: 0, index: 2 },
-    { x: 5, y: 0, index: 5 },
-    { x: 3, y: 0, index: 3 },
-    { x: 4, y: 0, index: 4 },
+    { x: 0, y: 0, index: "00" },
+    { x: 7, y: 0, index: "70" },
+    { x: 1, y: 0, index: "10" },
+    { x: 6, y: 0, index: "60" },
+    { x: 2, y: 0, index: "20" },
+    { x: 5, y: 0, index: "50" },
+    { x: 3, y: 0, index: "30" },
+    { x: 4, y: 0, index: "40" },
   ];
 }
 
 function getInitialWhitePositions(): Position[] {
   return [
     // Pawns (y=6)
-    ...Array(8).fill(0).map((_, x) => ({ x, y: 6, index: x + 6 * 8 })),
+    ...Array(8).fill(0).map((_, x) => ({
+      x,
+      y: 6,
+      index: `${x}${6}`
+    })),
     // Other pieces (y=7)
-    { x: 0, y: 7, index: 56 },
-    { x: 7, y: 7, index: 63 },
-    { x: 1, y: 7, index: 57 },
-    { x: 6, y: 7, index: 62 },
-    { x: 2, y: 7, index: 58 },
-    { x: 5, y: 7, index: 61 },
-    { x: 3, y: 7, index: 59 },
-    { x: 4, y: 7, index: 60 },
+    { x: 0, y: 7, index: "07" },
+    { x: 7, y: 7, index: "77" },
+    { x: 1, y: 7, index: "17" },
+    { x: 6, y: 7, index: "67" },
+    { x: 2, y: 7, index: "27" },
+    { x: 5, y: 7, index: "57" },
+    { x: 3, y: 7, index: "37" },
+    { x: 4, y: 7, index: "47" },
   ];
 }
-
 function createCells(size: number) {
   const cells = [];
   for (let y = 0; y < size; y++) {
