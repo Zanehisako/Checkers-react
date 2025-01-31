@@ -248,10 +248,29 @@ io.on("connection", (socket) => {
   var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: initboard() }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+
   socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+
   socket.on("leave room", async (room: String) => {
     socket.leave(room.toString())
   })
+
+  socket.on("Eat Multiple", (positions: Position[], type, time) => {
+    positions.forEach(position => {
+      var result = logique(current_room.board, position, type)
+      if (result === Moves.None || Moves.MoveToEmptySpot || Moves.MoveToEmptySpotUpgrade) {
+        return
+      } else {
+        updateBoard(current_room.board, position, type)
+        io.to(current_room!.number.toString()).emit("board", current_room.board)
+        io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+      }
+    });
+    current_room!.turn = type == 0 ? 0 : 1;
+    io.to(current_room!.number.toString()).except(socket.id).emit("turn")
+  });
+
+
   socket.on("join room as player", async (room: number) => {
     console.log("join room as player")
     current_room = emptyRooms.get(room) ?? fullRooms.get(room)
