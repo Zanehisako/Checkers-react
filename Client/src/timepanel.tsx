@@ -45,10 +45,9 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
 
     console.log('Registering move piece handler - socket is connected');
 
-    const handleMovePiece = (position: Position, type: number, _: number) => {
-      console.log('Received move piece event:', position);
+    const handleMovePiece = (positions: Position[], type: number) => {
       if (piece_type === type) {
-        setMessages(prevMessages => [...prevMessages, JSON.stringify(position)]);
+        setMessages(positions.map(pos => JSON.stringify(pos)));
       }
     };
 
@@ -62,10 +61,6 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
   return (
     <div className="bg-gray-900 flex flex-col">
       <div className="flex flex-col">
-        <div className={`px-2 py-1 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}>
-          {isConnected ? 'Connected' : 'Disconnected'}
-        </div>
-
         {messages.map((value, index) => (
           <a key={index} className="bg-white">
             {value}

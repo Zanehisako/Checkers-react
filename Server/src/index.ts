@@ -13,6 +13,7 @@ interface Position {
 
 interface Room {
   board: Position[][] | undefined,
+  moves_played: Position[][] | undefined,
   number: number;
   players: Map<string, number>;
   size: number;
@@ -232,10 +233,12 @@ const updateGameKing = (current_room: Room, position: Position, type: number, ti
 
     }
     io.to(current_room!.number.toString()).emit("board", current_room.board)
+    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type],type)
     io.to(current_room!.number.toString()).emit("update piece", position, type, time)
   } else if (result == MovesKing.MoveToEmptySpot) {
     updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
     io.to(current_room!.number.toString()).emit("board", current_room.board)
+    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type],type)
     io.to(current_room!.number.toString()).emit("update piece", position, type, time)
 
   }
@@ -261,10 +264,12 @@ const updateGamePawn = (current_room: Room, position: Position, type: number, ti
         break;
     }
     io.to(current_room!.number.toString()).emit("board", current_room.board)
+    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type],type)
     io.to(current_room!.number.toString()).emit("update piece", position, type, time)
   } else if (result == Moves.MoveToEmptySpot) {
     updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
     io.to(current_room!.number.toString()).emit("board", current_room.board)
+    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type],type)
     io.to(current_room!.number.toString()).emit("update piece", position, type, time)
 
   }
@@ -437,7 +442,7 @@ const removePiece = (room_number: string, boards: Position[][], removeIndex: str
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: initboard() }
+  var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: initboard(), moves_played: new Array<Position[]>() }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
 
@@ -509,6 +514,8 @@ io.on("connection", (socket) => {
   socket.on("get board", async () => {
     console.log("room", current_room)
     socket.emit("board", current_room.board)
+    socket.emit("moves", current_room.moves_played[0],0)
+    socket.emit("moves", current_room.moves_played[1],1)
 
   })
   socket.on("create room", async (room_number: number) => {
@@ -521,7 +528,8 @@ io.on("connection", (socket) => {
         players: new Map<string, number>,
         spectators: [],
         turn: 0,//0 cuz the first move is gonna be of type 1 white 
-        board: initboard()
+        board: initboard(),
+        moves_played: new Array<Position[]>()
       }
       current_room = room
       room.players.set(socket.id, 1)
@@ -539,6 +547,7 @@ io.on("connection", (socket) => {
     if (!current_room?.players.has(socket.id)) {
       return;
     }
+    current_room.moves_played[type].push(position)
     console.log("current Room", current_room)
     console.log("type", type)
     if (current_room?.turn == type) {

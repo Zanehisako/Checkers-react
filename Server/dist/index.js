@@ -17,6 +17,15 @@ var Moves;
     Moves[Moves["EatRightUpgrage"] = 5] = "EatRightUpgrage";
     Moves[Moves["EatLeftUpgrage"] = 6] = "EatLeftUpgrage";
 })(Moves || (Moves = {}));
+var MovesKing;
+(function (MovesKing) {
+    MovesKing[MovesKing["None"] = 0] = "None";
+    MovesKing[MovesKing["MoveToEmptySpot"] = 1] = "MoveToEmptySpot";
+    MovesKing[MovesKing["EatRightUp"] = 2] = "EatRightUp";
+    MovesKing[MovesKing["EatLeftUp"] = 3] = "EatLeftUp";
+    MovesKing[MovesKing["EatRightDown"] = 4] = "EatRightDown";
+    MovesKing[MovesKing["EatLeftDown"] = 5] = "EatLeftDown";
+})(MovesKing || (MovesKing = {}));
 const PORT = 3001;
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
@@ -58,6 +67,162 @@ const initboard = () => {
     }
     console.log(black_pieces_pos, white_pieces_pos);
     return [black_pieces_pos, white_pieces_pos];
+};
+const logiqueKing = (boards, pos, type) => {
+    console.time("Logic took:");
+    var result;
+    try {
+        switch (type) {
+            case 0:
+                console.log('board', boards[0]);
+                console.log("position king black", pos);
+                const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)];
+                console.log("old_position_king_black", old_position_black);
+                if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
+                    console.log("YOU SHALL NOT PASS!!");
+                    console.log("old_position_black.y < pos.y || old_position_black.x === pos.x");
+                    return result = MovesKing.None;
+                }
+                if ((pos.x - old_position_black.x > 2 || old_position_black.x - pos.x > 2) && pos.king == false) {
+                    console.log("YOU SHALL NOT PASS!!");
+                    console.log("(pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false");
+                    return result = MovesKing.None;
+                }
+                if ((pos.y - old_position_black.y > 2 || old_position_black.y - pos.y > 2) && pos.king == false) {
+                    console.log("YOU SHALL NOT PASS!!");
+                    return result = MovesKing.None;
+                }
+                if (!boards[1].some((position) => position.x === pos.x && position.y === pos.y)) {
+                    console.log("spot is empty");
+                    if (boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)) {
+                        console.log("EatRight");
+                        return MovesKing.EatRightUp;
+                    }
+                    else if (boards[1].some((position) => pos.x + 1 === position.x && pos.y + 1 === position.y)) {
+                        console.log("EatLeft");
+                        return MovesKing.EatLeftUp;
+                    }
+                    else if (boards[1].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)) {
+                        console.log("EatRightDown");
+                        return MovesKing.EatRightDown;
+                    }
+                    else if (boards[1].some((position) => pos.x + 1 === position.x && pos.y - 1 === position.y)) {
+                        console.log("EatLeftDown");
+                        return MovesKing.EatLeftDown;
+                    }
+                    else {
+                        return result = MovesKing.MoveToEmptySpot;
+                    }
+                }
+                else {
+                    console.log("YOU SHALL NOT PASS!!");
+                    return result = MovesKing.None;
+                }
+            case 1:
+                console.log('board', boards[1]);
+                console.log("position white", pos);
+                const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)];
+                console.log("old_position_white", old_position_white);
+                if (old_position_white.y > pos.y || old_position_white.x === pos.x) {
+                    console.log("YOU SHALL NOT PASS!!");
+                    console.log("old_position_white.y < pos.y || old_position_white.x === pos.x");
+                    return result = MovesKing.None;
+                }
+                if ((pos.x - old_position_white.x > 2 || old_position_white.x - pos.x > 2) && pos.king == false) {
+                    console.log("YOU SHALL NOT PASS!!");
+                    console.log("(pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false");
+                    return result = MovesKing.None;
+                }
+                if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
+                    console.log("YOU SHALL NOT PASS!!");
+                    console.log("(pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false");
+                    return result = MovesKing.None;
+                }
+                if (boards[0].some((position) => pos.x + 1 === position.x && pos.y - 1 === position.y)) {
+                    console.log("EatRight");
+                    return MovesKing.EatRightUp;
+                }
+                else if (boards[0].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)) {
+                    console.log("EatLeft");
+                    return MovesKing.EatLeftUp;
+                }
+                else if (boards[0].some((position) => pos.x + 1 === position.x && pos.y + 1 === position.y)) {
+                    console.log("EatRightDown");
+                    return MovesKing.EatRightDown;
+                }
+                else if (boards[0].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)) {
+                    console.log("EatLeftDown");
+                    return MovesKing.EatLeftDown;
+                }
+                else {
+                    return result = MovesKing.MoveToEmptySpot;
+                }
+        }
+    }
+    finally {
+        console.timeEnd("Logic took:");
+    }
+};
+const updateGameKing = (current_room, position, type, time) => {
+    console.log("time", time);
+    const result = logiqueKing(current_room.board, position, type);
+    console.log("the result of the logic is :", result);
+    if (result !== MovesKing.None && MovesKing.MoveToEmptySpot) {
+        const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type);
+        if (updateResult === "Game Over") {
+            io.to(current_room.number.toString()).emit("Game Over");
+            return;
+        }
+        current_room.turn = type == 0 ? 0 : 1;
+        switch (result) {
+            case MovesKing.EatLeftUp:
+                removePiece(current_room.number.toString(), current_room.board, `${position.x + 1}${position.y + 1}`, type == 0 ? 1 : 0);
+                break;
+            case MovesKing.EatLeftDown:
+                removePiece(current_room.number.toString(), current_room.board, `${position.x + 1}${position.y - 1}`, type == 0 ? 1 : 0);
+                break;
+            case MovesKing.EatRightUp:
+                removePiece(current_room.number.toString(), current_room.board, `${position.x - 1}${position.y + 1}`, type == 0 ? 1 : 0);
+                break;
+            case MovesKing.EatRightDown:
+                removePiece(current_room.number.toString(), current_room.board, `${position.x - 1}${position.y - 1}`, type == 0 ? 1 : 0);
+                break;
+        }
+        io.to(current_room.number.toString()).emit("board", current_room.board);
+        io.to(current_room.number.toString()).emit("update piece", position, type, time);
+    }
+    else if (result == MovesKing.MoveToEmptySpot) {
+        updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type);
+        io.to(current_room.number.toString()).emit("board", current_room.board);
+        io.to(current_room.number.toString()).emit("update piece", position, type, time);
+    }
+};
+const updateGamePawn = (current_room, position, type, time) => {
+    console.log("time", time);
+    const result = logique(current_room.board, position, type);
+    console.log("the result of the logic is :", result);
+    if (result == Moves.EatLeft || result == Moves.EatRight) {
+        const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type);
+        if (updateResult === "Game Over") {
+            io.to(current_room.number.toString()).emit("Game Over");
+            return;
+        }
+        switch (result) {
+            case Moves.EatLeft:
+                removePiece(current_room.number.toString(), current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
+                break;
+            case Moves.EatRight:
+                removePiece(current_room.number.toString(), current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
+                break;
+        }
+        io.to(current_room.number.toString()).emit("board", current_room.board);
+        io.to(current_room.number.toString()).emit("update piece", position, type, time);
+    }
+    else if (result == Moves.MoveToEmptySpot) {
+        updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type);
+        io.to(current_room.number.toString()).emit("board", current_room.board);
+        io.to(current_room.number.toString()).emit("update piece", position, type, time);
+    }
 };
 const logique = (boards, pos, type) => {
     console.time("Logic took:");
@@ -168,12 +333,18 @@ const updateBoard = (board, newPosition, type) => {
             const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
             if (indexBlack > -1) {
                 board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+                if (board[0].length === 0) {
+                    return "Game Over";
+                }
             }
             break;
         case 1:
             const indexWhite = board[1].findIndex(p => p.index === newPosition.index);
             if (indexWhite > -1) {
                 board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+                if (board[1].length === 0) {
+                    return "Game Over";
+                }
             }
             break;
     }
@@ -202,6 +373,21 @@ io.on("connection", (socket) => {
     socket.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
     socket.on("leave room", async (room) => {
         socket.leave(room.toString());
+    });
+    socket.on("Eat Multiple", (positions, type, time) => {
+        positions.forEach(position => {
+            var result;
+            switch (position.king) {
+                case true:
+                    updateGameKing(current_room, position, type, time);
+                    break;
+                case false:
+                    updateGamePawn(current_room, position, type, time);
+                    break;
+            }
+        });
+        current_room.turn = type == 0 ? 0 : 1;
+        io.to(current_room.number.toString()).except(socket.id).emit("turn");
     });
     socket.on("join room as player", async (room) => {
         console.log("join room as player");
@@ -283,34 +469,17 @@ io.on("connection", (socket) => {
             return;
         }
         else {
-            console.log("time", time);
-            const result = logique(current_room.board, position, type);
-            console.log("the result of the logic is :", result);
-            if (result == Moves.EatLeft || result == Moves.EatRight) {
-                updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type);
-                current_room.turn = type == 0 ? 0 : 1;
-                switch (result) {
-                    case Moves.EatLeft:
-                        removePiece(current_room.number.toString(), current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
-                        break;
-                    case Moves.EatRight:
-                        removePiece(current_room.number.toString(), current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
-                        break;
-                }
-                io.to(current_room.number.toString()).emit("board", current_room.board);
-                io.to(current_room.number.toString()).emit("update piece", position, type, time);
-                io.to(current_room.number.toString()).except(socket.id).emit("turn");
-            }
-            else if (result == Moves.MoveToEmptySpot) {
-                updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type);
-                io.to(current_room.number.toString()).emit("board", current_room.board);
-                io.to(current_room.number.toString()).emit("update piece", position, type, time);
-                current_room.turn = type == 0 ? 0 : 1;
-                io.to(current_room.number.toString()).except(socket.id).emit("turn");
-            }
-            else {
-                current_room.turn = type == 0 ? 0 : 1;
-                io.to(current_room.number.toString()).except(socket.id).emit("turn");
+            switch (position.king) {
+                case true:
+                    updateGameKing(current_room, position, type, time);
+                    current_room.turn = type == 0 ? 0 : 1;
+                    io.to(current_room.number.toString()).except(socket.id).emit("turn");
+                    break;
+                case false:
+                    updateGamePawn(current_room, position, type, time);
+                    current_room.turn = type == 0 ? 0 : 1;
+                    io.to(current_room.number.toString()).except(socket.id).emit("turn");
+                    break;
             }
         }
     });

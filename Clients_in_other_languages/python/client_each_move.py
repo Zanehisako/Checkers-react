@@ -20,14 +20,15 @@ def handleMsg(msg):
 
 @sio.on("turn")
 def turn():
-    time.sleep(2)
     match player_type:
         case 0:
+            index = input("Enter Index:\n")
             position_details = list(map(int,input("Enter Position:\n").split()))
-            sio.emit("move piece",({"index":str(position_details[0]),"x":position_details[1],"y":position_details[2],"king":False},player_type,random.randint(10)))
+            sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
         case 1:
+            index = input("Enter Index:\n")
             position_details = list(map(int,input("Enter Position:\n").split()))
-            sio.emit("move piece",({"index":str(position_details[0]),"x":position_details[1],"y":position_details[2],"king":False},player_type,random.randint(10)))
+            sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
 
 @sio.event
 def connect():
