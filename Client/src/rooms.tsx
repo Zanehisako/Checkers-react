@@ -65,17 +65,16 @@ export function Rooms() {
     sessionStorage.setItem('fullRoomsState', JSON.stringify(fullRooms));
     navigate(`/Game/${room}`)
   }
-  return (<div className="bg-gray-900 min-h-screen flex items-center justify-evenly text-white">
+  return (<div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center gap-4  text-white">
+    <h1 className="text-white font-bold">Rooms:</h1>
     <div className="flex flex-col justify-center items-center gap-3">
-      <h1 className="text-white rounded-full font-bold" >Empty Rooms :</h1>
       {emptyRooms.map((value, index) => (
-        <GlowButton key={index} value={value} onNavigate={onNavigate} />
+        <GlowButton key={index} value={value} onNavigate={onNavigate} empty={true} />
       ))}
     </div>
     <div className="flex flex-col justify-center items-center gap-3 ">
-      <h1 className="text-white rounded-full font-bold">Full Rooms:</h1>
       {fullRooms.map((value, index) => (
-        <GlowButton key={index} value={value} onNavigate={onNavigate} />
+        <GlowButton key={index} value={value} onNavigate={onNavigate} empty={false} />
       ))}
     </div>
 

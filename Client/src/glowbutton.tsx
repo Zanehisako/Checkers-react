@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-const GlowButton = ({ value, onNavigate }: { value: number, onNavigate: (room: number) => void }) => {
+const GlowButton = ({ value, onNavigate, empty }: { value: number, onNavigate: (room: number) => void, empty: boolean }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -37,12 +37,13 @@ const GlowButton = ({ value, onNavigate }: { value: number, onNavigate: (room: n
       />
 
       {/* Button */}
-      <button className="relative px-16 py-3 bg-gray-900 text-white text-opacity-40 rounded-full font-bold 
+      <button className="flex flex-row gap-8 relative px-16 py-3 bg-gray-900 text-white text-opacity-40 rounded-full font-bold 
                         border border-blue-300/20 hover:border-white/80 transition-all duration-200
                         hover:text-opacity-100 hover:scale-[1.1]">
         {value}
+        {<h1 className={empty ? "text-green-500 " : "text-red-500"} >{empty ? " 1/2" : " 2/2"}</h1>}
       </button>
-    </div>
+    </div >
   );
 };
 

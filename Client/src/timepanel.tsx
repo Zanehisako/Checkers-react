@@ -51,7 +51,7 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
       }
     };
 
-    socket.on("update piece", handleMovePiece);
+    socket.on("moves", handleMovePiece);
 
     return () => {
       socket.off("move piece", handleMovePiece);

@@ -22,11 +22,11 @@ def handleMsg(msg):
 def turn():
     match player_type:
         case 0:
-            index = input("Enter Index:\n")
+            index = input("Enter Index:\n").strip()
             position_details = list(map(int,input("Enter Position:\n").split()))
             sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
         case 1:
-            index = input("Enter Index:\n")
+            index = input("Enter Index:\n").strip()
             position_details = list(map(int,input("Enter Position:\n").split()))
             sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
 
