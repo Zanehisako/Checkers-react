@@ -453,20 +453,25 @@ io.on("connection", (socket) => {
   })
 
   socket.on("Eat Multiple", (positions: Position[], type, time) => {
-    positions.forEach(position => {
-      var result
-      switch (position.king) {
-        case true:
-          updateGameKing(current_room, position, type, time)
-          break;
-        case false:
-          updateGamePawn(current_room, position, type, time)
-          break;
+    try {
+      positions.forEach(position => {
+        var result
+        switch (position.king) {
+          case true:
+            updateGameKing(current_room, position, type, time)
+            break;
+          case false:
+            updateGamePawn(current_room, position, type, time)
+            break;
 
-      }
-    });
-    current_room!.turn = type == 0 ? 0 : 1;
-    io.to(current_room!.name).except(socket.id).emit("turn")
+        }
+      });
+      current_room!.turn = type == 0 ? 0 : 1;
+      io.to(current_room!.name).except(socket.id).emit("turn")
+    } catch (error) {
+      console.log(error)
+      io.to(current_room!.name).emit("msg", error)
+    }
   });
 
 
@@ -545,29 +550,35 @@ io.on("connection", (socket) => {
     console.log("position", position)
     console.log("type", type)
     //this make sure only players can send moves not spectators for example
-    if (!current_room?.players.has(socket.id)) {
-      return;
-    }
-    current_room.moves_played[type].push(position)
-    console.log("current Room", current_room)
-    console.log("type", type)
-    if (current_room?.turn == type) {
-      console.log("its not u're turn nigga damn!", type)
-      return;
-    } else {
-      switch (position.king) {
-        case true:
-          updateGameKing(current_room, position, type, time)
-          current_room!.turn = type == 0 ? 0 : 1;
-          io.to(current_room!.name).except(socket.id).emit("turn")
-          break;
-
-        case false:
-          updateGamePawn(current_room, position, type, time)
-          current_room!.turn = type == 0 ? 0 : 1;
-          io.to(current_room!.name).except(socket.id).emit("turn")
-          break;
+    try {
+      if (!current_room?.players.has(socket.id)) {
+        return;
       }
+      current_room.moves_played[type].push(position)
+      console.log("current Room", current_room)
+      console.log("type", type)
+      if (current_room?.turn == type) {
+        console.log("its not u're turn nigga damn!", type)
+        return;
+      } else {
+        switch (position.king) {
+          case true:
+            updateGameKing(current_room, position, type, time)
+            current_room!.turn = type == 0 ? 0 : 1;
+            io.to(current_room!.name).except(socket.id).emit("turn")
+            break;
+
+          case false:
+            updateGamePawn(current_room, position, type, time)
+            current_room!.turn = type == 0 ? 0 : 1;
+            io.to(current_room!.name).except(socket.id).emit("turn")
+            break;
+        }
+      }
+
+    } catch (error) {
+      console.log(error)
+      io.to(current_room!.name).emit("msg", error)
     }
   });
   socket.on("disconnect", () => {
