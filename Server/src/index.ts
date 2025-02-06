@@ -14,7 +14,7 @@ interface Position {
 interface Room {
   board: Position[][] | undefined,
   moves_played: Position[][] | undefined,
-  number: number;
+  name: string;
   players: Map<string, number>;
   size: number;
   spectators: string[];
@@ -53,8 +53,8 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-const emptyRooms = new Map<number, Room>()
-const fullRooms = new Map<number, Room>()
+const emptyRooms = new Map<string, Room>()
+const fullRooms = new Map<string, Room>()
 
 const initboard = () => {
   const black_pieces_pos: Position[] = [];
@@ -213,33 +213,33 @@ const updateGameKing = (current_room: Room, position: Position, type: number, ti
   if (result !== MovesKing.None && MovesKing.MoveToEmptySpot) {
     const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
     if (updateResult === "Game Over") {
-      io.to(current_room.number.toString()).emit("Game Over")
+      io.to(current_room.name.toString()).emit("Game Over")
       return
     }
     current_room!.turn = type == 0 ? 0 : 1;
     switch (result) {
       case MovesKing.EatLeftUp:
-        removePiece(current_room.number.toString(), current_room.board, `${position.x + 1}${position.y + 1}`, type == 0 ? 1 : 0)
+        removePiece(current_room.name.toString(), current_room.board, `${position.x + 1}${position.y + 1}`, type == 0 ? 1 : 0)
         break;
       case MovesKing.EatLeftDown:
-        removePiece(current_room.number.toString(), current_room.board, `${position.x + 1}${position.y - 1}`, type == 0 ? 1 : 0)
+        removePiece(current_room.name.toString(), current_room.board, `${position.x + 1}${position.y - 1}`, type == 0 ? 1 : 0)
         break;
       case MovesKing.EatRightUp:
-        removePiece(current_room.number.toString(), current_room.board, `${position.x - 1}${position.y + 1}`, type == 0 ? 1 : 0)
+        removePiece(current_room.name.toString(), current_room.board, `${position.x - 1}${position.y + 1}`, type == 0 ? 1 : 0)
         break;
       case MovesKing.EatRightDown:
-        removePiece(current_room.number.toString(), current_room.board, `${position.x - 1}${position.y - 1}`, type == 0 ? 1 : 0)
+        removePiece(current_room.name.toString(), current_room.board, `${position.x - 1}${position.y - 1}`, type == 0 ? 1 : 0)
         break;
 
     }
-    io.to(current_room!.number.toString()).emit("board", current_room.board)
-    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type], type)
-    io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+    io.to(current_room!.name).emit("board", current_room.board)
+    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+    io.to(current_room!.name).emit("update piece", position, type, time)
   } else if (result == MovesKing.MoveToEmptySpot) {
     updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
-    io.to(current_room!.number.toString()).emit("board", current_room.board)
-    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type], type)
-    io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+    io.to(current_room!.name).emit("board", current_room.board)
+    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+    io.to(current_room!.name).emit("update piece", position, type, time)
 
   }
 }
@@ -251,26 +251,26 @@ const updateGamePawn = (current_room: Room, position: Position, type: number, ti
   if (result == Moves.EatLeft || result == Moves.EatRight) {
     const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
     if (updateResult === "Game Over") {
-      io.to(current_room.number.toString()).emit("Game Over")
+      io.to(current_room.name).emit("Game Over")
       return
     }
     switch (result) {
       case Moves.EatLeft:
-        removePiece(current_room.number.toString(), current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
+        removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
         break;
 
       case Moves.EatRight:
-        removePiece(current_room.number.toString(), current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
+        removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
         break;
     }
-    io.to(current_room!.number.toString()).emit("board", current_room.board)
-    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type], type)
-    io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+    io.to(current_room!.name).emit("board", current_room.board)
+    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+    io.to(current_room!.name).emit("update piece", position, type, time)
   } else if (result == Moves.MoveToEmptySpot) {
     updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
-    io.to(current_room!.number.toString()).emit("board", current_room.board)
-    io.to(current_room!.number.toString()).emit("moves", current_room.moves_played[type], type)
-    io.to(current_room!.number.toString()).emit("update piece", position, type, time)
+    io.to(current_room!.name).emit("board", current_room.board)
+    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+    io.to(current_room!.name).emit("update piece", position, type, time)
 
   }
 }
@@ -442,7 +442,7 @@ const removePiece = (room_number: string, boards: Position[][], removeIndex: str
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { number: 0, size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: initboard(), moves_played: [[], []] }
+  var current_room: Room | undefined = { name: '', size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: initboard(), moves_played: [[], []] }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
 
@@ -466,11 +466,11 @@ io.on("connection", (socket) => {
       }
     });
     current_room!.turn = type == 0 ? 0 : 1;
-    io.to(current_room!.number.toString()).except(socket.id).emit("turn")
+    io.to(current_room!.name).except(socket.id).emit("turn")
   });
 
 
-  socket.on("join room as player", async (room: number) => {
+  socket.on("join room as player", async (room: string) => {
     console.log("join room as player")
     current_room = emptyRooms.get(room) ?? fullRooms.get(room)
     if (current_room === undefined) {
@@ -500,13 +500,13 @@ io.on("connection", (socket) => {
       socket.emit("msg", "The client is already in the room");
     }
   }),
-    socket.on("join room as spectator", async (room: number) => {
+    socket.on("join room as spectator", async (room: string) => {
       current_room = emptyRooms.get(room) ?? fullRooms.get(room)
       if (current_room === undefined) {
         socket.emit("msg", "Room doesn't exits");
       } else {
         await socket.join(room.toString())
-        io.to(current_room.number.toString()).emit("board", current_room.board)
+        io.to(current_room.name).emit("board", current_room.board)
         current_room.spectators.push(socket.id)
       }
     });
@@ -518,12 +518,12 @@ io.on("connection", (socket) => {
     socket.emit("moves", current_room.moves_played[1], 1)
 
   })
-  socket.on("create room", async (room_number: number) => {
-    current_room = emptyRooms.get(room_number) ?? fullRooms.get(room_number)
+  socket.on("create room", async (room_name: string) => {
+    current_room = emptyRooms.get(room_name) ?? fullRooms.get(room_name)
     if (current_room === undefined) {
-      socket.join(room_number.toString())
+      socket.join(room_name);
       const room: Room = {
-        number: room_number,
+        name: room_name,
         size: 1,
         players: new Map<string, number>,
         spectators: [],
@@ -534,7 +534,7 @@ io.on("connection", (socket) => {
       current_room = room
       room.players.set(socket.id, 1)
       socket.emit("msg", "Room Created Successfully");
-      emptyRooms.set(room_number, room)
+      emptyRooms.set(room_name, room)
       io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
     } else {
       socket.emit("msg", "Room does exits");
@@ -559,13 +559,13 @@ io.on("connection", (socket) => {
         case true:
           updateGameKing(current_room, position, type, time)
           current_room!.turn = type == 0 ? 0 : 1;
-          io.to(current_room!.number.toString()).except(socket.id).emit("turn")
+          io.to(current_room!.name).except(socket.id).emit("turn")
           break;
 
         case false:
           updateGamePawn(current_room, position, type, time)
           current_room!.turn = type == 0 ? 0 : 1;
-          io.to(current_room!.number.toString()).except(socket.id).emit("turn")
+          io.to(current_room!.name).except(socket.id).emit("turn")
           break;
       }
     }
@@ -582,13 +582,12 @@ io.on("connection", (socket) => {
         current_room?.players.delete(socket.id)
         switch (current_room.size) {
           case 0:
-            console.log(current_room.number)
-            emptyRooms.delete(current_room.number)
+            emptyRooms.delete(current_room.name)
             console.log("deleting empty room")
             break;
           case 1:
-            fullRooms.delete(current_room.number)
-            emptyRooms.set(current_room.number, current_room)
+            fullRooms.delete(current_room.name)
+            emptyRooms.set(current_room.name, current_room)
             console.log("deleting full room and creating a full room")
             break;
         }

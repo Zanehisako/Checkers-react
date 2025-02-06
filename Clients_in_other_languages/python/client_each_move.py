@@ -5,7 +5,6 @@ from numpy import random
 sio = socketio.Client()
 
 choise_room = 0
-room_number = 0
 player_type = 1
 
 
@@ -40,18 +39,18 @@ print("------Join or Create Room:------\n0:Create room : \n1:Join Room :")
 choise_room= int(input())
 match choise_room:
     case 0:
-        print("Enter room number:")
-        room_number= int(input())
-        sio.emit("create room",room_number)
+        print("Enter room name :")
+        room_name= input().strip()
+        sio.emit("create room",room_name)
     case 1 :
-        print("Enter room number:")
-        room_number= int(input())
+        print("Enter room name:")
+        room_name= input().strip()
         print("join as spectator or player?:\n0:Player:\n1:Spectator")
         player_or_spectator= int(input())
         match player_or_spectator:
             case 0:
                 player_type= 0
-                sio.emit("join room as player",room_number)
+                sio.emit("join room as player",room_name)
             case 1:
-                sio.emit("join room as spectator",room_number)
+                sio.emit("join room as spectator",room_name)
 sio.wait()
