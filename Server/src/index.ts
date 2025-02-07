@@ -2,6 +2,7 @@ import express from "express"; // Import Express framework
 import cors from "cors"; // Import CORS middleware
 import http from "http"; // Import Node's HTTP module
 import { Server } from "socket.io"; // Import Socket.IO Server class
+import { randomUUID } from "crypto";
 
 interface Position {
   index: string;
@@ -18,6 +19,20 @@ interface Room {
   size: number;
   spectators: string[];
   turn: number;
+}
+
+interface Puzzle {
+  board: Position[][] | undefined,
+  name: string,
+  solution: Position[]
+}
+
+
+interface PuzzleRoom {
+  moves_played: Position[] | undefined,
+  puzzle: Puzzle,
+  player: string,
+  spectators: string[] | undefined
 }
 
 enum Moves {
@@ -54,6 +69,9 @@ const io = new Server(server, {
 });
 const emptyRooms = new Map<string, Room>()
 const fullRooms = new Map<string, Room>()
+
+const Puzzles = new Map<string, Puzzle>()
+const puzzlesRooms = new Map<string, PuzzleRoom>()
 
 const initboard = () => {
   const black_pieces_pos: Position[] = [];
@@ -429,6 +447,55 @@ io.on("connection", (socket) => {
       io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
     } else {
       socket.emit("msg", "Room does exits");
+    }
+  });
+  socket.on("play puzzle", async (puzzle_name: string) => {
+    try {
+
+      const puzzle = Puzzles[puzzle_name]
+      const puzzle_room_name = puzzle_name + randomUUID()
+      socket.join(puzzle_room_name);
+      const puzzle_room: PuzzleRoom = {
+        puzzle: puzzle,
+        player: socket.id,
+        spectators: undefined,
+        moves_played: undefined
+      }
+      socket.emit("msg", "Puzzle Room Created Successfully");
+      puzzlesRooms.set(puzzle_room_name, puzzle_room)
+      io.emit("Puzzle rooms", Array.from(puzzlesRooms.keys()))
+    } catch (error) {
+      console.log(error)
+      io.emit("msg", error)
+    }
+  });
+  socket.on("move piece puzzle", async (position: Position, type: number, time: number, puzzle_room_name: string) => {
+    const puzzle_room: PuzzleRoom = puzzlesRooms[puzzle_room_name]
+    console.log("position", position)
+    console.log("type", type)
+    //this make sure only players can send moves not spectators for example
+    try {
+      if (puzzle_room.player !== socket.id) {
+        return;
+      }
+      puzzle_room.moves_played.push(position)
+      switch (position.king) {
+        case true:
+          updateGameKing(current_room, position, type, time)
+          current_room!.turn = type == 0 ? 0 : 1;
+          io.to(current_room!.name).except(socket.id).emit("turn")
+          break;
+
+        case false:
+          updateGamePawn(current_room, position, type, time)
+          current_room!.turn = type == 0 ? 0 : 1;
+          io.to(current_room!.name).except(socket.id).emit("turn")
+          break;
+      }
+
+    } catch (error) {
+      console.log(error)
+      io.to(current_room!.name).emit("msg", error)
     }
   });
 
