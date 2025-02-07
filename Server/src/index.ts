@@ -2,7 +2,6 @@ import express from "express"; // Import Express framework
 import cors from "cors"; // Import CORS middleware
 import http from "http"; // Import Node's HTTP module
 import { Server } from "socket.io"; // Import Socket.IO Server class
-import { Socket } from "dgram";
 
 interface Position {
   index: string;
@@ -89,170 +88,70 @@ const initboard = () => {
 };
 
 
-const logiqueKing = (boards: Position[][], pos: Position, type: number) => {
-  console.time("Logic took:")
-  var result: MovesKing;
+const calculateKingMove = (
+  boards: Position[][],
+  newPos: Position,
+  player: number
+): Moves => {
+  console.time("King Logic took:");
   try {
-    switch (type) {
-      case 0:
-        console.log('board', boards[0])
-        console.log("position king black", pos);
-        const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
-        console.log("old_position_king_black", old_position_black)
-        if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("old_position_black.y < pos.y || old_position_black.x === pos.x")
-          return result = MovesKing.None
-        }
-        if ((pos.x - old_position_black.x > 2 || old_position_black.x - pos.x > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("(pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false")
-          return result = MovesKing.None
-        }
-        if ((pos.y - old_position_black.y > 2 || old_position_black.y - pos.y > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          return result = MovesKing.None
-        }
-        if (
-          !boards[1].some((position) => position.x === pos.x && position.y === pos.y)
-        ) {
-          console.log("spot is empty");
-          if (
-            boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
-          ) {
-            console.log("EatRight");
-            return MovesKing.EatRightUp
-          }
-          else if (
-            boards[1].some((position) => pos.x + 1 === position.x && pos.y + 1 === position.y)
-          ) {
-            console.log("EatLeft");
-            return MovesKing.EatLeftUp;
+    const playerBoard = boards[player];
+    const enemyBoard = boards[1 - player];
 
-          }
-          else if (
-            boards[1].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)
-          ) {
-            console.log("EatRightDown");
-            return MovesKing.EatRightDown;
+    // Find the moving piece on the player's board.
+    const movingPiece = playerBoard.find(piece => piece.index === newPos.index);
+    if (!movingPiece) return Moves.None;
+    // Ensure the piece is actually a king.
+    if (!movingPiece.king) return Moves.None;
 
-          } else if (
-            boards[1].some((position) => pos.x + 1 === position.x && pos.y - 1 === position.y)
-          ) {
-            console.log("EatLeftDown");
-            return MovesKing.EatLeftDown;
+    // Calculate differences.
+    const dx = newPos.x - movingPiece.x;
+    const dy = newPos.y - movingPiece.y;
 
-          } else {
-            return result = MovesKing.MoveToEmptySpot;
-          }
+    // The move must be strictly diagonal.
+    if (Math.abs(dx) !== Math.abs(dy)) return Moves.None;
 
-        }
-        else {
-          console.log("YOU SHALL NOT PASS!!")
-          return result = MovesKing.None;
-        }
-      case 1:
-        console.log('board', boards[1])
-        console.log("position white", pos);
-        const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
-        console.log("old_position_white", old_position_white)
-        if (old_position_white.y > pos.y || old_position_white.x === pos.x) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("old_position_white.y < pos.y || old_position_white.x === pos.x")
-          return result = MovesKing.None
-        }
-        if ((pos.x - old_position_white.x > 2 || old_position_white.x - pos.x > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("(pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false")
-          return result = MovesKing.None
-        }
-        if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("(pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false")
-          return result = MovesKing.None
-        }
-        if (
-          boards[0].some((position) => pos.x + 1 === position.x && pos.y - 1 === position.y)
-        ) {
-          console.log("EatRight");
-          return MovesKing.EatRightUp
-        }
-        else if (
-          boards[0].some((position) => pos.x - 1 === position.x && pos.y - 1 === position.y)
-        ) {
-          console.log("EatLeft");
-          return MovesKing.EatLeftUp;
+    // Check that the destination square is empty.
+    const destinationOccupied = boards[0]
+      .concat(boards[1])
+      .some(piece => piece.x === newPos.x && piece.y === newPos.y);
+    if (destinationOccupied) return Moves.None;
 
-        }
-        else if (
-          boards[0].some((position) => pos.x + 1 === position.x && pos.y + 1 === position.y)
-        ) {
-          console.log("EatRightDown");
-          return MovesKing.EatRightDown;
-
-        } else if (
-          boards[0].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
-        ) {
-          console.log("EatLeftDown");
-          return MovesKing.EatLeftDown;
-
-        } else {
-          return result = MovesKing.MoveToEmptySpot;
-        }
+    // Simple move: one square diagonal.
+    if (Math.abs(dx) === 1) {
+      return Moves.MoveToEmptySpot;
     }
+
+    // Capture move: two squares diagonal.
+    if (Math.abs(dx) === 2) {
+      // Compute the midpoint (the square being jumped).
+      const midX = movingPiece.x + dx / 2;
+      const midY = movingPiece.y + dy / 2;
+
+      // An enemy piece must occupy the midpoint.
+      const enemyPresent = enemyBoard.some(piece => piece.x === midX && piece.y === midY);
+      if (!enemyPresent) return Moves.None;
+
+      // Determine the horizontal direction for capture.
+      // (This is arbitrary; you can choose labels as needed.)
+      return dx < 0 ? Moves.EatLeft : Moves.EatRight;
+    }
+
+    // If the king tries to move more than two squares (i.e. “flying king” logic),
+    // it’s not supported in this simple implementation.
+    return Moves.None;
   } finally {
-    console.timeEnd("Logic took:")
+    console.timeEnd("King Logic took:");
   }
 };
 
 const updateGameKing = (current_room: Room, position: Position, type: number, time: number) => {
-
   console.log("time", time);
-  const result = logiqueKing(current_room.board, position, type)
+  const result = calculateKingMove(current_room.board, position, type)
   console.log("the result of the logic is :", result)
-  if (result !== MovesKing.None && MovesKing.MoveToEmptySpot) {
-    const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
-    if (updateResult === "Game Over") {
-      io.to(current_room.name.toString()).emit("Game Over")
-      return
-    }
-    current_room!.turn = type == 0 ? 0 : 1;
-    switch (result) {
-      case MovesKing.EatLeftUp:
-        removePiece(current_room.name.toString(), current_room.board, `${position.x + 1}${position.y + 1}`, type == 0 ? 1 : 0)
-        break;
-      case MovesKing.EatLeftDown:
-        removePiece(current_room.name.toString(), current_room.board, `${position.x + 1}${position.y - 1}`, type == 0 ? 1 : 0)
-        break;
-      case MovesKing.EatRightUp:
-        removePiece(current_room.name.toString(), current_room.board, `${position.x - 1}${position.y + 1}`, type == 0 ? 1 : 0)
-        break;
-      case MovesKing.EatRightDown:
-        removePiece(current_room.name.toString(), current_room.board, `${position.x - 1}${position.y - 1}`, type == 0 ? 1 : 0)
-        break;
-
-    }
-    io.to(current_room!.name).emit("board", current_room.board)
-    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
-    io.to(current_room!.name).emit("update piece", position, type, time)
-  } else if (result == MovesKing.MoveToEmptySpot) {
-    updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
-    io.to(current_room!.name).emit("board", current_room.board)
-    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
-    io.to(current_room!.name).emit("update piece", position, type, time)
-
-  }
-}
-
-const updateGamePawn = (current_room: Room, position: Position, type: number, time: number) => {
-  console.log("time", time);
-  const result = logique(current_room.board, position, type)
-  console.log("the result of the logic is :", result)
-  if (result == Moves.EatLeft || result == Moves.EatRight) {
-    const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
-    if (updateResult === "Game Over") {
-      io.to(current_room.name).emit("Game Over")
-      return
+  if (result !== Moves.None) {
+    if (result === Moves.EatLeft || Moves.EatRight || Moves.MoveToEmptySpot) {
+      const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
     }
     switch (result) {
       case Moves.EatLeft:
@@ -262,130 +161,117 @@ const updateGamePawn = (current_room: Room, position: Position, type: number, ti
       case Moves.EatRight:
         removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
         break;
+
+      default:
+        break;
     }
     io.to(current_room!.name).emit("board", current_room.board)
     io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
     io.to(current_room!.name).emit("update piece", position, type, time)
-  } else if (result == Moves.MoveToEmptySpot) {
-    updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
-    io.to(current_room!.name).emit("board", current_room.board)
-    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
-    io.to(current_room!.name).emit("update piece", position, type, time)
-
   }
 }
 
-const logique = (boards: Position[][], pos: Position, type: number) => {
-  console.time("Logic took:")
-  var result: Moves;
-  try {
-    switch (type) {
-      case 0:
-        console.log('board', boards[0])
-        console.log("position black", pos);
-        const old_position_black = boards[0][boards[0].findIndex((position) => position.index == pos.index)]
-        console.log("old_position_black", old_position_black)
-        if (old_position_black.y < pos.y || old_position_black.x === pos.x) {
-          /*console.log("boards[0] posti", boards[0]);
-          console.log("boards[1] posti", boards[1]);*/
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("old_position_black.y < pos.y || old_position_black.x === pos.x")
-          return result = Moves.None
-        }
-        if ((pos.x - old_position_black.x > 2 || old_position_black.x - pos.x > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("(pos.x - old_position_black.x > 2 || pos.x + old_position_black.x > 2) && pos.king == false")
-          return result = Moves.None
-        }
-        if ((pos.y - old_position_black.y > 2 || old_position_black.y - pos.y > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          return result = Moves.None
-        }
-        if (
-          !boards[1].some((position) => position.x === pos.x && position.y === pos.y)
-        ) {
-          console.log("spot is empty");
-          if (
-            boards[1].some((position) => pos.x - 1 === position.x && pos.y + 1 === position.y)
-          ) {
-            console.log("EatRight");
-            if (pos.y == 0) {
-              return result = Moves.EatRightUpgrage
-
-            } else {
-              return result = Moves.EatRight;
-            }
-          }
-          else if (
-            boards[1].some((position) => pos.x + 1 === position.x && pos.y + 1 === position.y)
-          ) {
-            console.log("EatLeft");
-            if (pos.y == 0) {
-              return Moves.EatLeftUpgrage
-            } else {
-              return Moves.EatLeft;
-            }
-
-          } else {
-            return result = Moves.MoveToEmptySpot;
-          }
-
-        }
-        else {
-          console.log("YOU SHALL NOT PASS!!")
-          return result = Moves.None;
-        }
-      case 1:
-        console.log('board', boards[1])
-        console.log("position white", pos);
-        const old_position_white = boards[1][boards[1].findIndex((position) => position.index == pos.index)]
-        console.log("old_position_white", old_position_white)
-        if (old_position_white.y > pos.y || old_position_white.x === pos.x) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("old_position_white.y < pos.y || old_position_white.x === pos.x")
-          return result = Moves.None
-        }
-        if ((pos.x - old_position_white.x > 2 || old_position_white.x - pos.x > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("(pos.x - old_position_white.x > 2 || pos.x + old_position_white.x > 2) && pos.king == false")
-          return result = Moves.None
-        }
-        if ((pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false) {
-          console.log("YOU SHALL NOT PASS!!")
-          console.log("(pos.y - old_position_white.y > 2 || old_position_white.y - pos.y > 2) && pos.king == false")
-          return result = Moves.None
-        }
-        if (
-          !boards[0].some((position) => position.x == pos.x && position.y == pos.y)
-        ) {
-          console.log("spot is empty");
-          console.log("Position after spot is empty", pos)
-          if (
-            boards[0].some((position) => position.x === (pos.x + 1) && position.y === (pos.y - 1))
-          ) {
-            console.log(boards[0])
-            console.log("EatLeft");
-            return result = Moves.EatLeft;
-          }
-          else if (
-            boards[0].some((position) => position.x === (pos.x - 1) && position.y === (pos.y - 1))
-          ) {
-            console.log(boards[0])
-            console.log("EatRight");
-            return Moves.EatRight;
-          } else {
-            return result = Moves.MoveToEmptySpot;
-          }
-
-        }
-        else {
-          console.log("there is another piece!!")
-          console.log("YOU SHALL NOT PASS!!")
-          return result = Moves.None;
-        }
+const updateGamePawn = (current_room: Room, position: Position, type: number, time: number) => {
+  console.log("time", time);
+  const result = calculateMove(current_room.board, position, type)
+  console.log("the result of the logic is :", result)
+  if (result !== Moves.None) {
+    if (result === Moves.EatLeft || Moves.EatRight || Moves.MoveToEmptySpot) {
+      const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
+    } else if (result === Moves.EatRightUpgrage || Moves.EatLeftUpgrage || Moves.MoveToEmptySpotUpgrade) {
+      const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y, king: true }, type)
     }
+    switch (result) {
+      case Moves.EatLeft:
+        removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
+        break;
+
+      case Moves.EatRight:
+        removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
+        break;
+      case Moves.EatLeftUpgrage:
+        removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
+        break;
+
+      case Moves.EatRightUpgrage:
+        removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
+        break;
+      default:
+        break;
+    }
+    io.to(current_room!.name).emit("board", current_room.board)
+    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+    io.to(current_room!.name).emit("update piece", position, type, time)
+  }
+}
+
+const calculateMove = (
+  boards: Position[][],
+  newPos: Position,
+  player: number
+): Moves => {
+  console.time("Logic took:");
+  try {
+    // Get the moving piece from the player's board by matching the index.
+    const playerBoard = boards[player];
+    const enemyBoard = boards[1 - player];
+    const movingPiece = playerBoard.find((p) => p.index === newPos.index);
+    if (!movingPiece) return Moves.None;
+
+    // Compute the differences between the new position and the old one.
+    const dx = newPos.x - movingPiece.x;
+    const dy = newPos.y - movingPiece.y;
+
+    // The move must be diagonal: dx and dy must be nonzero and have the same absolute value.
+    if (dx === 0 || Math.abs(dx) !== Math.abs(dy)) {
+      return Moves.None;
+    }
+
+    // For non-king pieces, enforce forward movement.
+    // (Player 0 moves up: new y must be lower; player 1 moves down: new y must be higher.)
+    if (!movingPiece.king) {
+      if (player === 0 && dy >= 0) return Moves.None;
+      if (player === 1 && dy <= 0) return Moves.None;
+    }
+
+    // For non-king pieces, only one-step (simple move) or two-step (capture) moves are allowed.
+    if (!movingPiece.king && Math.abs(dx) > 2) return Moves.None;
+
+    // Ensure the destination is not occupied by any piece.
+    const destinationOccupied = boards[0]
+      .concat(boards[1])
+      .some((p) => p.x === newPos.x && p.y === newPos.y);
+    if (destinationOccupied) return Moves.None;
+
+    // If moving two steps, it must be a capture move.
+    if (Math.abs(dx) === 2) {
+      // The piece being jumped over should be exactly midway.
+      const midX = movingPiece.x + dx / 2;
+      const midY = movingPiece.y + dy / 2;
+      const enemyPresent = enemyBoard.some((p) => p.x === midX && p.y === midY);
+      if (!enemyPresent) return Moves.None;
+
+      // Determine left or right capture based on horizontal movement.
+      // (You can rename these as you prefer; here a leftward move is considered "EatLeft".)
+      // Also, check for promotion:
+      const promotionRow = player === 0 ? 0 : 7; // adjust board size if needed
+      const isPromotion = newPos.y === promotionRow;
+      if (dx < 0) {
+        return isPromotion ? Moves.EatLeftUpgrage : Moves.EatLeft;
+      } else {
+        return isPromotion ? Moves.EatRightUpgrage : Moves.EatRight;
+      }
+    }
+
+    // A one-step diagonal move into an empty square is allowed.
+    if (Math.abs(dx) === 1) {
+      return Moves.MoveToEmptySpot;
+    }
+
+    // If none of the valid cases match, return None.
+    return Moves.None;
   } finally {
-    console.timeEnd("Logic took:")
+    console.timeEnd("Logic took:");
   }
 };
 
