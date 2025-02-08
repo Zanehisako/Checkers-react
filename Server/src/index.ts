@@ -175,7 +175,7 @@ const updateGameKing = (player_name: string, current_room: Room, position: Posit
   // Reject non-capture moves if a capture is available
   if (captureRequired && !(result === Moves.EatLeft || result === Moves.EatRight)) {
     console.log("Move rejected: Capture is mandatory!");
-    io.to(current_room.name).emit("Error", "You must capture an opponent's piece!");
+    io.to(player_name).emit("Error", "You must capture an opponent's piece!");
     return;
   }
   console.log("the result of the logic is :", result)
@@ -215,7 +215,7 @@ const updateGamePawn = (player_name: string, current_room: Room, position: Posit
   // Reject non-capture moves if a capture is available
   if (captureRequired && !(result === Moves.EatLeft || result === Moves.EatRight)) {
     console.log("Move rejected: Capture is mandatory!");
-    io.to(current_room.name).emit("Error", "You must capture an opponent's piece!");
+    io.to(player_name).emit("Error", "You must capture an opponent's piece!");
     console.timeEnd("updateGamePawn");
     return;
   }
@@ -452,7 +452,7 @@ io.on("connection", (socket) => {
       io.to(current_room!.name).except(socket.id).emit("turn")
     } catch (error) {
       console.log(error)
-      io.to(current_room!.name).emit("msg", error)
+      io.to(current_room!.name).emit("Error", error)
     }
   });
 
@@ -506,25 +506,32 @@ io.on("connection", (socket) => {
 
   })
   socket.on("create room", async (room_name: string) => {
-    current_room = emptyRooms.get(room_name) ?? fullRooms.get(room_name)
-    if (current_room === undefined) {
-      socket.join(room_name);
-      const room: Room = {
-        name: room_name,
-        size: 1,
-        players: new Map<string, number>,
-        spectators: [],
-        turn: 0,//0 cuz the first move is gonna be of type 1 white 
-        board: initboard(),
-        moves_played: [[], []]
+    try {
+
+      current_room = emptyRooms.get(room_name) ?? fullRooms.get(room_name)
+      if (current_room === undefined) {
+        socket.join(room_name);
+        const room: Room = {
+          name: room_name,
+          size: 1,
+          players: new Map<string, number>,
+          spectators: [],
+          turn: 0,//0 cuz the first move is gonna be of type 1 white 
+          board: initboard(),
+          moves_played: [[], []]
+        }
+        current_room = room
+        room.players.set(socket.id, 1)
+        socket.emit("msg", "Room Created Successfully");
+        emptyRooms.set(room_name, room)
+        io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+      } else {
+        socket.emit("msg", "Room does exits");
       }
-      current_room = room
-      room.players.set(socket.id, 1)
-      socket.emit("msg", "Room Created Successfully");
-      emptyRooms.set(room_name, room)
-      io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
-    } else {
-      socket.emit("msg", "Room does exits");
+    } catch (error) {
+      console.log(error)
+      io.emit("Error", error)
+
     }
   });
   socket.on("play puzzle", async (puzzle_name: string) => {
@@ -544,7 +551,7 @@ io.on("connection", (socket) => {
       io.emit("Puzzle rooms", Array.from(puzzlesRooms.keys()))
     } catch (error) {
       console.log(error)
-      io.emit("msg", error)
+      io.emit("Error", error)
     }
   });
   socket.on("move piece puzzle", async (position: Position, type: number, time: number, puzzle_room_name: string) => {
@@ -571,7 +578,7 @@ io.on("connection", (socket) => {
 
     } catch (error) {
       console.log(error)
-      io.to(current_room!.name).emit("msg", error)
+      io.to(current_room!.name).emit("Error", error)
     }
   });
 

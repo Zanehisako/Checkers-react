@@ -8,16 +8,6 @@ choise_room = 0
 player_type = 1
 
 
-@sio.on("rooms")
-def Handlerooms(emptyRooms,fullRooms):
-    print("empty rooms are ",emptyRooms)
-    print("full rooms are ",fullRooms)
-
-@sio.on("msg")
-def handleMsg(msg):
-    print(msg)
-
-@sio.on("turn")
 def turn():
     match player_type:
         case 0:
@@ -29,9 +19,31 @@ def turn():
             position_details = list(map(int,input("Enter Position:\n").split()))
             sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
 
-@sio.event
+def Handlerooms(emptyRooms,fullRooms):
+    print("empty rooms are ",emptyRooms)
+    print("full rooms are ",fullRooms)
+
+sio.on("rooms",Handlerooms)
+
+def handleMsg(msg):
+    print(msg)
+sio.on("msg",handleMsg)
+
+
+def handleError(error):
+    match error:
+        case "You must capture an opponent's piece!":
+            print(error)
+            turn() 
+        case _:
+            print(error)
+
+sio.on('turn',turn)
+sio.on('Error',handleError)
+
 def connect():
     print("connected successfully")
+sio.on("connect",connect)
 
 sio.connect("http://localhost:3001")
 time.sleep(0.5)
