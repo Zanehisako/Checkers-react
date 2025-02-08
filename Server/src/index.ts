@@ -163,9 +163,21 @@ const calculateKingMove = (
   }
 };
 
-const updateGameKing = (current_room: Room, position: Position, type: number, time: number) => {
+const updateGameKing = (player_name: string, current_room: Room, position: Position, type: number, time: number) => {
   console.log("time", time);
-  const result = calculateKingMove(current_room.board, position, type)
+
+  const captureRequired = hasMandatoryCapture(current_room.board, type);
+  console.log(`Mandatory capture required: ${captureRequired}`);
+
+  // Check what move type was attempted
+  const result = calculateMove(current_room.board, position, type)
+
+  // Reject non-capture moves if a capture is available
+  if (captureRequired && !(result === Moves.EatLeft || result === Moves.EatRight)) {
+    console.log("Move rejected: Capture is mandatory!");
+    io.to(current_room.name).emit("Error", "You must capture an opponent's piece!");
+    return;
+  }
   console.log("the result of the logic is :", result)
   if (result !== Moves.None) {
     if (result === Moves.EatLeft || Moves.EatRight || Moves.MoveToEmptySpot) {
@@ -183,15 +195,30 @@ const updateGameKing = (current_room: Room, position: Position, type: number, ti
       default:
         break;
     }
+    current_room!.turn = type == 0 ? 0 : 1;
     io.to(current_room!.name).emit("board", current_room.board)
     io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
     io.to(current_room!.name).emit("update piece", position, type, time)
+    io.to(current_room!.name).except(player_name).emit("turn")
   }
 }
 
-const updateGamePawn = (current_room: Room, position: Position, type: number, time: number) => {
+const updateGamePawn = (player_name: string, current_room: Room, position: Position, type: number, time: number) => {
   console.log("time", time);
+  // Check if a mandatory capture exists
+  const captureRequired = hasMandatoryCapture(current_room.board, type);
+  console.log(`Mandatory capture required: ${captureRequired}`);
+
+  // Check what move type was attempted
   const result = calculateMove(current_room.board, position, type)
+
+  // Reject non-capture moves if a capture is available
+  if (captureRequired && !(result === Moves.EatLeft || result === Moves.EatRight)) {
+    console.log("Move rejected: Capture is mandatory!");
+    io.to(current_room.name).emit("Error", "You must capture an opponent's piece!");
+    console.timeEnd("updateGamePawn");
+    return;
+  }
   console.log("the result of the logic is :", result)
   if (result !== Moves.None) {
     if (result === Moves.EatLeft || Moves.EatRight || Moves.MoveToEmptySpot) {
@@ -217,11 +244,62 @@ const updateGamePawn = (current_room: Room, position: Position, type: number, ti
       default:
         break;
     }
+    current_room!.turn = type == 0 ? 0 : 1;
     io.to(current_room!.name).emit("board", current_room.board)
     io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
     io.to(current_room!.name).emit("update piece", position, type, time)
+    io.to(current_room!.name).except(player_name).emit("turn")
   }
 }
+
+const hasMandatoryCapture = (board: Position[][], player: number): boolean => {
+  // For a pawn, determine the vertical movement direction.
+  // Player 0 must move upward (negative y change), and player 1 downward (positive y change).
+  const dy = player === 0 ? -1 : 1;
+  const jumpY = player === 0 ? -2 : 2;
+
+  // The pieces for the current player and the opponent.
+  const playerPieces = board[player];
+  const opponentPieces = board[player === 0 ? 1 : 0];
+
+  return playerPieces.some((piece) => {
+    const { x, y, king } = piece;
+
+    // Define the basic capture moves for a pawn.
+    let captureMoves = [
+      { dx: -1, dy: dy, jumpX: -2, jumpY: jumpY }, // Left capture
+      { dx: 1, dy: dy, jumpX: 2, jumpY: jumpY }  // Right capture
+    ];
+
+    // If this piece is a king, add the backward capture moves.
+    if (king) {
+      captureMoves.push(
+        { dx: -1, dy: -dy, jumpX: -2, jumpY: -jumpY },
+        { dx: 1, dy: -dy, jumpX: 2, jumpY: -jumpY }
+      );
+    }
+
+    // Check each possible capture move.
+    return captureMoves.some(({ dx, dy: moveDy, jumpX, jumpY: moveJumpY }) => {
+      const midX = x + dx;
+      const midY = y + moveDy;
+      const landX = x + jumpX;
+      const landY = y + moveJumpY;
+
+      // Determine if an opponent piece occupies the middle square.
+      const isOpponent = opponentPieces.some((p) => p.x === midX && p.y === midY);
+      // And ensure that the landing square is not occupied by any piece.
+      const isLandingEmpty = !playerPieces.some((p) => p.x === landX && p.y === landY) &&
+        !opponentPieces.some((p) => p.x === landX && p.y === landY);
+
+      if (isOpponent && isLandingEmpty) {
+        console.log(`Mandatory capture found for player ${player}: piece at (${x}, ${y}) can jump over (${midX}, ${midY}) to (${landX}, ${landY})`);
+        return true;
+      }
+      return false;
+    });
+  });
+};
 
 const calculateMove = (
   boards: Position[][],
@@ -362,10 +440,10 @@ io.on("connection", (socket) => {
         var result
         switch (position.king) {
           case true:
-            updateGameKing(current_room, position, type, time)
+            updateGameKing(socket.id, current_room, position, type, time)
             break;
           case false:
-            updateGamePawn(current_room, position, type, time)
+            updateGamePawn(socket.id, current_room, position, type, time)
             break;
 
         }
@@ -481,14 +559,12 @@ io.on("connection", (socket) => {
       puzzle_room.moves_played.push(position)
       switch (position.king) {
         case true:
-          updateGameKing(current_room, position, type, time)
-          current_room!.turn = type == 0 ? 0 : 1;
+          updateGameKing(socket.id, current_room, position, type, time)
           io.to(current_room!.name).except(socket.id).emit("turn")
           break;
 
         case false:
-          updateGamePawn(current_room, position, type, time)
-          current_room!.turn = type == 0 ? 0 : 1;
+          updateGamePawn(socket.id, current_room, position, type, time)
           io.to(current_room!.name).except(socket.id).emit("turn")
           break;
       }
@@ -516,15 +592,11 @@ io.on("connection", (socket) => {
       } else {
         switch (position.king) {
           case true:
-            updateGameKing(current_room, position, type, time)
-            current_room!.turn = type == 0 ? 0 : 1;
-            io.to(current_room!.name).except(socket.id).emit("turn")
+            updateGameKing(socket.id, current_room, position, type, time)
             break;
 
           case false:
-            updateGamePawn(current_room, position, type, time)
-            current_room!.turn = type == 0 ? 0 : 1;
-            io.to(current_room!.name).except(socket.id).emit("turn")
+            updateGamePawn(socket.id, current_room, position, type, time)
             break;
         }
       }
