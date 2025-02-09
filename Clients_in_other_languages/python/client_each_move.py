@@ -11,9 +11,16 @@ player_type = 1
 def turn():
     match player_type:
         case 0:
-            index = input("Enter Index:\n").strip()
-            position_details = list(map(int,input("Enter Position:\n").split()))
-            sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
+            single_multiple = int(input("0:single\n1:multiple").strip())
+            match single_multiple:
+                case 0:
+                    index = input("Enter Index:\n").strip()
+                    position_details = list(map(int,input("Enter Position:\n").split()))
+                    sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
+                case 1:
+                    index = input("Enter Index:\n").strip()
+                    position_details = list(map(int,input("Enter Position:\n").split()))
+                    sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
         case 1:
             index = input("Enter Index:\n").strip()
             position_details = list(map(int,input("Enter Position:\n").split()))
@@ -45,7 +52,7 @@ def connect():
     print("connected successfully")
 sio.on("connect",connect)
 
-sio.connect("http://localhost:3001")
+sio.connect("https://checkers-react-production.up.railway.app/")
 time.sleep(0.5)
 print("------Join or Create Room:------\n0:Create room : \n1:Join Room :")
 choise_room= int(input())

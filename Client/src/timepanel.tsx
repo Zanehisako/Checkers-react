@@ -59,15 +59,15 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
   }, [isConnected, socket]); // Depend on both socket and connection state
 
   return (
-    <div className="bg-gray-900 flex flex-col">
+    <div className={`${piece_type === 0 ? 'bg-gray-900' : 'bg-black'} flex flex-col`}>
       <div className="flex flex-col">
         {messages.map((value, index) => (
-          <a key={index} className="bg-white">
+          <a key={index} className={`${piece_type === 0 ? 'bg-black text-white' : 'bg-white text-black'}`}>
             {value}
           </a>
         ))}
       </div>
-      <a className={`${slow ? 'bg-green-600' : 'bg-red-500'} border border-black"`}>{time}</a>
-    </div>
+      <a className={`${slow ? 'bg-green-600' : 'bg-red-500'} border - black"`}>{time}</a>
+    </div >
   );
 }

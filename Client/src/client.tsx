@@ -59,12 +59,14 @@ function Client() {
   };
   // Handle game events only when connected
   const notify = (id: string) => toast("A user Has connected: " + id);
+  const notifyError = (Error: string) => toast(Error);
   useEffect(() => {
     if (!isConnected) {
       return; // Don't register handlers if not connected
     }
 
     socket.on("Player Joined", notify)
+    socket.on("Error", notifyError)
     socket.on("update piece", handleMovePiece);
     return () => {
       socket.off("update piece", handleMovePiece);
