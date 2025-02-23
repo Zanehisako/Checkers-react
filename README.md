@@ -1,6 +1,3 @@
-Voici un exemple de README en français pour votre serveur TypeScript. Vous pouvez copier ce contenu dans votre fichier `README.md` :
-
----
 
 # Serveur de Dames en Temps Réel
 
