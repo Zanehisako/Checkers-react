@@ -171,7 +171,7 @@ const updateGameKing = (
   player_name: string,
   current_room: Room,
   newPos: Position,  // new position the player is moving to
-  player: number,    // player number (0 or 1)
+  type: number,    // player number (0 or 1)
   time: number
 ) => {
   console.log("time", time);
@@ -183,7 +183,7 @@ const updateGameKing = (
   */
 
   // Retrieve the moving king’s original position.
-  const playerBoard = current_room.board[player];
+  const playerBoard = current_room.board[type];
   const movingPiece = playerBoard.find(piece => piece.index === newPos.index);
   if (!movingPiece) {
     io.to(player_name).emit("Error", "Moving piece not found!");
@@ -193,7 +193,7 @@ const updateGameKing = (
   const oldY = movingPiece.y;
 
   // Check what move type was attempted.
-  const result = calculateKingMove(current_room.board, newPos, player);
+  const result = calculateKingMove(current_room.board, newPos, type);
 
   // Reject non–capture moves if a capture is available.
   /*
@@ -214,11 +214,11 @@ const updateGameKing = (
 
   if (result !== MovesKing.None) {
     // Update the board to reflect the new position.
-    const updateResult = updateBoard(current_room.board, newPos, player);
+    const updateResult = updateBoard(current_room.board, newPos, type);
     if (updateResult === "Game Over") {
       io.to(current_room.name).emit("board", current_room.board);
-      io.to(current_room.name).emit("moves", current_room.moves_played[player], player);
-      io.to(current_room.name).emit("update piece", newPos, player, time);
+      io.to(current_room.name).emit("moves", current_room.moves_played[type], type);
+      io.to(current_room.name).emit("update piece", newPos, type, time);
       io.to(current_room.name).emit("Game Over");
       return;
     }
@@ -233,7 +233,7 @@ const updateGameKing = (
       // Compute the midpoint coordinates.
       const enemyX = oldX + (newPos.x - oldX) / 2;
       const enemyY = oldY + (newPos.y - oldY) / 2;
-      const enemyPlayer = player === 0 ? 1 : 0;
+      const enemyPlayer = type === 0 ? 1 : 0;
       removePiece(current_room.name, current_room.board, `${enemyX}${enemyY}`, enemyPlayer);
 
       // Check if the same piece can capture again.
@@ -250,15 +250,19 @@ const updateGameKing = (
 
     // Broadcast the updated board state.
     io.to(current_room.name).emit("board", current_room.board);
-    io.to(current_room.name).emit("moves", current_room.moves_played[player], player);
-    io.to(current_room.name).emit("update piece", newPos, player, time);
+    io.to(current_room.name).emit("moves", current_room.moves_played[type], type);
+    io.to(current_room.name).emit("update piece", newPos, type, time);
 
     if (!multiple) {
       // Switch turn if not in a multiple–capture sequence.
-      current_room.turn = player === 0 ? 1 : 0;
+      current_room.turn = type === 0 ? 1 : 0;
       io.to(current_room.name).except(player_name).emit("turn");
     }
     return result;
+  }
+  else {
+    io.to(current_room!.name).emit("Wrong move", current_room.moves_played[type], type)
+    io.to(player_name).emit("turn")
   }
 };
 
@@ -367,6 +371,10 @@ const updateGamePawn = (multiple: boolean, player_name: string, current_room: Ro
       current_room!.turn = type == 0 ? 0 : 1;
       io.to(current_room!.name).except(player_name).emit("turn")
     }
+  }
+  else {
+    io.to(current_room!.name).emit("Wrong move", current_room.moves_played[type], type)
+    io.to(player_name).emit("turn")
   }
   return result
 }

@@ -52,7 +52,7 @@ def connect():
     print("connected successfully")
 sio.on("connect",connect)
 
-sio.connect("https://checkers-react-production.up.railway.app/")
+sio.connect("http://localhost:3001")
 time.sleep(0.5)
 print("------Join or Create Room:------\n0:Create room : \n1:Join Room :")
 choise_room= int(input())

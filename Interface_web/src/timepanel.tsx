@@ -6,9 +6,13 @@ interface timepanelProp {
   time: number
   slow: boolean
 }
+interface Message{
+  text:string
+  error: boolean
+}
 
 export function TimePanel({ piece_type, time, slow }: timepanelProp) {
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const socket = useSocket();
 
@@ -47,11 +51,17 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
 
     const handleMovePiece = (positions: Position[], type: number) => {
       if (piece_type === type) {
-        setMessages(positions.map(pos => JSON.stringify(pos)));
+        setMessages(positions.map(pos => ({text:JSON.stringify(pos),error:false})));
+      }
+    };
+    const handleWrongMoves= (positions: Position[], type: number) => {
+      if (piece_type === type) {
+        setMessages(positions.map(pos => ({text:JSON.stringify(pos),error:true})));
       }
     };
 
     socket.on("moves", handleMovePiece);
+    socket.on("Wrong move", handleWrongMoves);
 
     return () => {
       socket.off("move piece", handleMovePiece);
@@ -62,8 +72,8 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
     <div className={`${piece_type === 0 ? 'bg-gray-900' : 'bg-black'} flex flex-col`}>
       <div className="flex flex-col">
         {messages.map((value, index) => (
-          <a key={index} className={`${piece_type === 0 ? 'bg-black text-white' : 'bg-white text-black'}`}>
-            {value}
+          <a key={index} className={`${piece_type === 0 ? 'bg-black text-white' : 'bg-white text-black'} ${value.error=== true ? 'line-through' : 'no-underline'}`}>
+            {value.text}
           </a>
         ))}
       </div>

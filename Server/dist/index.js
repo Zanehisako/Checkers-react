@@ -131,8 +131,10 @@ player, // player number (0 or 1)
 time) => {
     console.log("time", time);
     // Check if any capture move is mandatory.
+    /*
     const captureRequired = hasMandatoryCapture(current_room.board, player);
     console.log(`Mandatory capture required: ${captureRequired}`);
+    */
     // Retrieve the moving king’s original position.
     const playerBoard = current_room.board[player];
     const movingPiece = playerBoard.find(piece => piece.index === newPos.index);
@@ -145,15 +147,20 @@ time) => {
     // Check what move type was attempted.
     const result = calculateKingMove(current_room.board, newPos, player);
     // Reject non–capture moves if a capture is available.
-    if (captureRequired &&
-        !(result === MovesKing.EatLeftUp ||
-            result === MovesKing.EatRightUp ||
-            result === MovesKing.EatLeftDown ||
-            result === MovesKing.EatRightDown)) {
-        console.log("Move rejected: Capture is mandatory!");
-        io.to(player_name).emit("Error", "You must capture an opponent's piece!");
-        return;
-    }
+    /*
+    if (
+      captureRequired &&
+      !(
+        result === MovesKing.EatLeftUp ||
+        result === MovesKing.EatRightUp ||
+        result === MovesKing.EatLeftDown ||
+        result === MovesKing.EatRightDown
+      )
+    ) {
+      console.log("Move rejected: Capture is mandatory!");
+      io.to(player_name).emit("Error", "You must capture an opponent's piece!");
+      return;
+    }*/
     console.log("Result from king move logic:", result);
     if (result !== MovesKing.None) {
         // Update the board to reflect the new position.
@@ -176,15 +183,15 @@ time) => {
             const enemyPlayer = player === 0 ? 1 : 0;
             removePiece(current_room.name, current_room.board, `${enemyX}${enemyY}`, enemyPlayer);
             // Check if the same piece can capture again.
-            const captureStillAvailable = hasMandatoryCapture(current_room.board, player);
+            /*const captureStillAvailable = hasMandatoryCapture(current_room.board, player);
             if (captureStillAvailable && !multiple) {
-                console.log("Mandatory additional capture required.");
-                io.to(player_name).emit("Error", "You must continue capturing!");
-                io.to(current_room.name).emit("board", current_room.board);
-                io.to(current_room.name).emit("moves", current_room.moves_played[player], player);
-                io.to(current_room.name).emit("update piece", newPos, player, time);
-                return;
-            }
+              console.log("Mandatory additional capture required.");
+              io.to(player_name).emit("Error", "You must continue capturing!");
+              io.to(current_room.name).emit("board", current_room.board);
+              io.to(current_room.name).emit("moves", current_room.moves_played[player], player);
+              io.to(current_room.name).emit("update piece", newPos, player, time);
+              return;
+            }*/
         }
         // Broadcast the updated board state.
         io.to(current_room.name).emit("board", current_room.board);
@@ -201,17 +208,20 @@ time) => {
 const updateGamePawn = (multiple, player_name, current_room, position, type, time) => {
     console.log("time", time);
     // Check if a mandatory capture exists
+    /*
     const captureRequired = hasMandatoryCapture(current_room.board, type);
     console.log(`Mandatory capture required: ${captureRequired}`);
+    */
     // Check what move type was attempted
     const result = calculateMove(current_room.board, position, type);
     // Reject non-capture moves if a capture is available
+    /*
     if (captureRequired && !(result === Moves.EatLeft || result === Moves.EatRight)) {
-        console.log("Move rejected: Capture is mandatory!");
-        io.to(player_name).emit("Error", "You must capture an opponent's piece!");
-        console.timeEnd("updateGamePawn");
-        return;
-    }
+      console.log("Move rejected: Capture is mandatory!");
+      io.to(player_name).emit("Error", "You must capture an opponent's piece!");
+      console.timeEnd("updateGamePawn");
+      return;
+    }*/
     console.log("the result of the logic is :", result);
     if (result !== Moves.None) {
         if (result === Moves.EatLeft || Moves.EatRight || Moves.MoveToEmptySpot) {
@@ -250,39 +260,40 @@ const updateGamePawn = (multiple, player_name, current_room, position, type, tim
                 break;
             case Moves.EatRight:
                 removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
-                const captureRequiredRight = hasMandatoryCapture(current_room.board, type);
-                if (captureRequiredRight && !multiple) {
+                /*
+                  const captureRequiredRight = hasMandatoryCapture(current_room.board, type);
+                  if (captureRequiredRight && !multiple) {
                     console.log(`Mandatory capture required: ${captureRequired}`);
-                    io.to(player_name).emit("Error", "Mandatory capture required");
-                    io.to(current_room.name).emit("board", current_room.board);
-                    io.to(current_room.name).emit("moves", current_room.moves_played[type], type);
-                    io.to(current_room.name).emit("update piece", position, type, time);
-                    return;
-                }
+                    io.to(player_name).emit("Error", "Mandatory capture required")
+                    io.to(current_room!.name).emit("board", current_room.board)
+                    io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+                    io.to(current_room!.name).emit("update piece", position, type, time)
+                    return
+                  }*/
                 break;
             case Moves.EatLeftUpgrage:
                 removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
-                const captureRequiredLeft_Upgraded = hasMandatoryCapture(current_room.board, type);
+                /* const captureRequiredLeft_Upgraded = hasMandatoryCapture(current_room.board, type);
                 if (captureRequiredLeft_Upgraded && !multiple) {
-                    console.log(`Mandatory capture required: ${captureRequired}`);
-                    io.to(player_name).emit("Error", "Mandatory capture required");
-                    io.to(current_room.name).emit("board", current_room.board);
-                    io.to(current_room.name).emit("moves", current_room.moves_played[type], type);
-                    io.to(current_room.name).emit("update piece", position, type, time);
-                    return;
-                }
+                  console.log(`Mandatory capture required: ${captureRequired}`);
+                  io.to(player_name).emit("Error", "Mandatory capture required")
+                  io.to(current_room!.name).emit("board", current_room.board)
+                  io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+                  io.to(current_room!.name).emit("update piece", position, type, time)
+                  return
+                } */
                 break;
             case Moves.EatRightUpgrage:
                 removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
-                const captureRequiredRight_Upgraded = hasMandatoryCapture(current_room.board, type);
+                /* const captureRequiredRight_Upgraded = hasMandatoryCapture(current_room.board, type);
                 if (captureRequiredRight_Upgraded && !multiple) {
-                    console.log(`Mandatory capture required: ${captureRequired}`);
-                    io.to(player_name).emit("Error", "Mandatory capture required");
-                    io.to(current_room.name).emit("board", current_room.board);
-                    io.to(current_room.name).emit("moves", current_room.moves_played[type], type);
-                    io.to(current_room.name).emit("update piece", position, type, time);
-                    return;
-                }
+                  console.log(`Mandatory capture required: ${captureRequired}`);
+                  io.to(player_name).emit("Error", "Mandatory capture required")
+                  io.to(current_room!.name).emit("board", current_room.board)
+                  io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
+                  io.to(current_room!.name).emit("update piece", position, type, time)
+                  return
+                } */
                 break;
             default:
                 break;
