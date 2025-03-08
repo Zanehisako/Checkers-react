@@ -106,6 +106,30 @@ const initboard = () => {
 };
 
 
+const repeatedMoves = (room: Room, position: Position, type: number): boolean => {
+  if (room.moves_played[type].length < 2) {
+    return false;
+  }
+
+  const last = room.moves_played[type].length - 1;
+
+  console.log(`last move: ${JSON.stringify(room.moves_played[type][last])}`);
+  console.log(`new move: ${JSON.stringify(position)}`);
+
+  // Function to compare two JSON objects
+  const isEqual = (obj1: any, obj2: any): boolean => {
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
+  };
+
+  if (isEqual(room.moves_played[type][last], position) &&
+    isEqual(room.moves_played[type][last], room.moves_played[type][last - 1])) {
+    console.log(`player ${type} repeated a move more than 3 times`);
+    return true;
+  }
+
+  return false;
+};
+
 const calculateKingMove = (
   boards: Position[][],
   newPos: Position,
@@ -255,7 +279,7 @@ const updateGameKing = (
 
     if (!multiple) {
       // Switch turn if not in a multiple–capture sequence.
-      current_room.turn = type === 0 ? 1 : 0;
+      current_room.turn = type === 0 ? 0 : 1;
       io.to(current_room.name).except(player_name).emit("turn");
     }
     return result;
@@ -306,11 +330,11 @@ const updateGamePawn = (multiple: boolean, player_name: string, current_room: Ro
         return
       }
     }
-    const captureRequired = hasMandatoryCapture(current_room.board, type);
+    //const captureRequired = hasMandatoryCapture(current_room.board, type);
     switch (result) {
       case Moves.EatLeft:
         removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0)
-        const captureRequiredLeft = hasMandatoryCapture(current_room.board, type);
+        /* const captureRequiredLeft = hasMandatoryCapture(current_room.board, type);
         if (captureRequiredLeft && !multiple) {
           console.log(`Mandatory capture required: ${captureRequired}`);
           io.to(player_name).emit("Error", "Mandatory capture required")
@@ -318,7 +342,7 @@ const updateGamePawn = (multiple: boolean, player_name: string, current_room: Ro
           io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
           io.to(current_room!.name).emit("update piece", position, type, time)
           return
-        }
+        } */
         break;
 
       case Moves.EatRight:
@@ -505,7 +529,7 @@ const updateBoard = (board: Position[][], newPosition: Position, type: number) =
     case 0:
       const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
       if (indexBlack > -1) {
-        board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+        board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 0 ? true : false }; // ✅ Direct array update
         if (board[0].length === 0) {
           return "Game Over"
         }
@@ -515,7 +539,7 @@ const updateBoard = (board: Position[][], newPosition: Position, type: number) =
     case 1:
       const indexWhite = board[1].findIndex(p => p.index === newPosition.index);
       if (indexWhite > -1) {
-        board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+        board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 7 ? true : false }; // ✅ Direct array update
         if (board[1].length === 0) {
           return "Game Over"
         }
@@ -606,6 +630,7 @@ io.on("connection", (socket) => {
           socket.emit("msg", "joined room Successfully");
           io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
           console.log("Room", room.toString())
+          io.to(room.toString()).except(socket.id).emit("board", current_room.board)
           io.to(room.toString()).except(socket.id).emit("turn")
           io.to(room.toString()).except(socket.id).emit("Player Joined", socket.id)
           break;
@@ -721,6 +746,10 @@ io.on("connection", (socket) => {
     try {
       if (!current_room?.players.has(socket.id)) {
         return;
+      }
+      if (repeatedMoves(current_room, position, type)) {
+        console.log("Game Over")
+        return
       }
       current_room.moves_played[type].push(position)
       console.log("current Room", current_room)
