@@ -17,7 +17,7 @@ Ce projet est un serveur et interface de dames en temps réel développé avec T
 
 ## Installation
 
-1. **Cloner le Répertoire **
+1. **Cloner le Répertoire**
 
    ```bash
    git clone  https://github.com/Zanehisako/Checkers-react.git
