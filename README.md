@@ -168,8 +168,8 @@ Ce projet est l'interface web du jeu de dames en temps réel, développée avec 
 1. **Cloner le dépôt**  
 
    ```bash
-   git clone https://github.com/votreutilisateur/votre-repo-web.git
-   cd votre-repo-web
+   git clone https://github.com/Zanehisako/Checkers-react.git
+   cd Interface_web
    ```
 
 2. **Installer les dépendances**  
@@ -181,11 +181,11 @@ Ce projet est l'interface web du jeu de dames en temps réel, développée avec 
 3. **Démarrer l’application**  
 
    ```bash
-   npm run dev
+   npm start
    ```
 
-   Par défaut, l’interface est accessible sur `http://localhost:5173` (si vous utilisez Vite) ou `http://localhost:3000` (si vous utilisez Create React App).  
+   Par défaut, l’interface est accessible sur `http://localhost:3000`   
 
 
-Vous pouvez également héberger l’application sur une plateforme comme Vercel, Netlify ou un serveur Nginx.  
+
 
