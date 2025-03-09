@@ -17,11 +17,11 @@ Ce projet est un serveur et interface de dames en temps réel développé avec T
 
 ## Installation
 
-1. **Cloner le Répertoire**
+1. **Cloner le Répertoire **
 
    ```bash
-   git clone https://github.com/votreutilisateur/votre-repo.git
-   cd votre-repo
+   git clone  https://github.com/Zanehisako/Checkers-react.git
+   cd Server
    ```
 
 2. **Installer les Dépendances**
@@ -38,11 +38,6 @@ Ce projet est un serveur et interface de dames en temps réel développé avec T
    npm run build
    ```
 
-   Vous pouvez également exécuter directement le serveur en utilisant [ts-node](https://github.com/TypeStrong/ts-node) :
-
-   ```bash
-   npx ts-node src/server.ts
-   ```
 
 4. **Démarrer le Serveur**
 
@@ -165,7 +160,7 @@ Ce projet est l'interface web du jeu de dames en temps réel, développée avec 
 
 ## Installation  
 
-1. **Cloner le dépôt**  
+1. **Cloner le dépôt si tu ai pas deja**  
 
    ```bash
    git clone https://github.com/Zanehisako/Checkers-react.git
