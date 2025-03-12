@@ -1,10 +1,9 @@
 import React, { JSX, useEffect, useState } from "react";
 import { Piece } from "./piece";
 import { Cell } from "./cell";
-import io from "socket.io-client";
 import { useSocket } from "./socketcontext";
 
-interface Position {
+export interface Position {
   index: string;
   x: number;
   y: number;
@@ -22,7 +21,6 @@ export function Board({
   type,
   positions,
   cellIndex,
-  SetCell,
   move,
 }: BoardProp) {
   const [boardPositions, setBoardPositions] = useState<Position[]>(positions);
@@ -33,7 +31,7 @@ export function Board({
 
   return (
     <>
-      {boardPositions.map((position, index) => (
+      {boardPositions.map((position) => (
         <Piece
           key={`${type}-${position.index}-${position.x}-${position.y}`}
           SelectedIndex={cellIndex}
@@ -43,7 +41,6 @@ export function Board({
           x={position.x}
           y={position.y}
           onMove={move}
-          onSelect={SetCell}
         />
       ))}
     </>
@@ -80,6 +77,22 @@ export function MainBoard() {
 
   if (isLoading) {
     return <div className="loading">Loading board...</div>;
+  }
+  function createCells(size: number) {
+    const cells: JSX.Element[] = [];
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        cells.push(
+          <Cell
+            x={x}
+            y={y}
+            type={(x + y) % 2 === 0 ? 1 : 0}
+            onClickFn={setSelectedCell}
+          />
+        );
+      }
+    }
+    return cells;
   }
 
   return (
@@ -142,19 +155,4 @@ function getInitialWhitePositions(): Position[] {
     { x: 3, y: 7, index: "37" },
     { x: 4, y: 7, index: "47" },
   ];
-}
-function createCells(size: number) {
-  const cells = [];
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const index = x + y * size;
-      cells.push(
-        <Cell
-          key={index}
-          type={(x + y) % 2 === 0 ? 1 : 0}
-        />
-      );
-    }
-  }
-  return cells;
 }

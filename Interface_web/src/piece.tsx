@@ -8,8 +8,13 @@ interface PieceProps {
   source: string;
   x: number;
   y: number;
-  onSelect: React.Dispatch<React.SetStateAction<number[]>>;
   onMove: (position: Position, type: number) => void;
+}
+interface Position {
+  index: string
+  x: number,
+  y: number,
+  king: boolean
 }
 
 
@@ -19,11 +24,14 @@ export function Piece({
   source,
   x,
   y,
-  onSelect,
 }: PieceProps) {
   const socket = useSocket();
   const [position_x, setX] = useState(x);
+  const [secondClick, setSecondClick] = useState(false);
+  const [isKing, setKing] = useState(false);
   const [position_y, setY] = useState(y);
+  const [tapX, setTapX] = useState(0);
+  const [tapY, setTapY] = useState(0);
   const [new_index,] = useState(index);
 
   useEffect(() => {
@@ -35,19 +43,19 @@ export function Piece({
       }
     });
   }, []);
-
   return (
     <img
       key={x + y * 8}
       src={source}
       width={36}
       height={36}
-      className="absolute cursor-pointer hover:scale-10 transition-transform duration-200 "
+      className={"absolute hover:scale-10 transition-transform duration-200 pointer-events-none"}
       style={{
         width: 64,
         transform: `translate(${position_x * 64}px,${position_y * 64}px)`, //this is the position of the piece
       }}
       alt="piece"
+      draggable="false"
     />
   );
 }

@@ -529,7 +529,12 @@ const updateBoard = (board: Position[][], newPosition: Position, type: number) =
     case 0:
       const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
       if (indexBlack > -1) {
-        board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 0 ? true : false }; // ✅ Direct array update
+        if (newPosition.king) {
+
+          board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+        } else {
+          board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 0 ? true : false }; // ✅ Direct array update
+        }
         if (board[0].length === 0) {
           return "Game Over"
         }
@@ -539,7 +544,11 @@ const updateBoard = (board: Position[][], newPosition: Position, type: number) =
     case 1:
       const indexWhite = board[1].findIndex(p => p.index === newPosition.index);
       if (indexWhite > -1) {
-        board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 7 ? true : false }; // ✅ Direct array update
+        if (newPosition.king) {
+          board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}` }; // ✅ Direct array update
+        } else {
+          board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 7 ? true : false }; // ✅ Direct array update
+        }
         if (board[1].length === 0) {
           return "Game Over"
         }
