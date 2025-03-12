@@ -2,6 +2,7 @@ import { useRef } from "react";
 
 interface GlowButtonProps {
   text: string;
+  color: string;
   value?: number;
   onClick: (room?: number) => void;
   size?: "small" | "medium" | "large"; // Added size prop
@@ -10,6 +11,7 @@ interface GlowButtonProps {
 
 const GlowButton = ({
   text,
+  color,
   value,
   onClick,
   size = "medium", // Default is medium
@@ -62,7 +64,7 @@ const GlowButton = ({
       />
       {/* Button */}
       <button
-        className={`flex items-center justify-center relative ${sizeClasses[size]} bg-gray-900 text-white text-opacity-40 rounded-full font-bold 
+        className={`flex items-center justify-center relative ${sizeClasses[size]} bg-${color}-500 text-white text-opacity-40 rounded-full font-bold 
                   border border-blue-300/20 hover:border-white/80 transition-all duration-200
                   hover:text-opacity-100 hover:scale-[1.05] ${className}`}
         onClick={() => { onClick(value) }}

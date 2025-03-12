@@ -157,7 +157,7 @@ export function MainBoard() {
   }
 
   return (
-    <div className="grid grid-cols-8 w-128 h-128 relative">
+    <div className=" grid grid-cols-8 w-128 h-128 relative">
       {createCells(boardSize)}
       <Board
         type={0}

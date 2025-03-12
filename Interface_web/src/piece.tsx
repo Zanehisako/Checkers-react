@@ -27,12 +27,7 @@ export function Piece({
 }: PieceProps) {
   const socket = useSocket();
   const [position_x, setX] = useState(x);
-  const [secondClick, setSecondClick] = useState(false);
-  const [isKing, setKing] = useState(false);
   const [position_y, setY] = useState(y);
-  const [tapX, setTapX] = useState(0);
-  const [tapY, setTapY] = useState(0);
-  const [new_index,] = useState(index);
 
   useEffect(() => {
     socket.on("update piece", (newPos: Position) => {
