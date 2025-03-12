@@ -6,10 +6,11 @@ interface timepanelProp {
   time: number
   slow: boolean
 }
-interface Message{
-  text:string
+interface Message {
+  text: string
   error: boolean
 }
+
 
 export function TimePanel({ piece_type, time, slow }: timepanelProp) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,19 +23,13 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
       console.log('Socket connected in TimePanel!');
       setIsConnected(true);
     }
-
     function onDisconnect() {
       console.log('Socket disconnected in TimePanel!');
       setIsConnected(false);
     }
-
-    // Register connection handlers
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
-
-    // Set initial connection state
     setIsConnected(socket.connected);
-
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
@@ -43,20 +38,45 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
 
   // Handle game events only when connected
   useEffect(() => {
-    if (!isConnected) {
-      return; // Don't register handlers if not connected
-    }
-
-    console.log('Registering move piece handler - socket is connected');
+    if (!isConnected) return;
 
     const handleMovePiece = (positions: Position[], type: number) => {
       if (piece_type === type) {
-        setMessages(positions.map(pos => ({text:JSON.stringify(pos),error:false})));
+        const newMessages: Message[] = [];
+        for (const pos of positions) {
+          const messageText = JSON.stringify(pos);
+          // Check if this message already exists in any form (error or non-error)
+          const isDuplicate = messages.some(msg => msg.text === messageText);
+
+          if (!isDuplicate) {
+            newMessages.push({ text: messageText, error: false });
+          }
+        }
+
+        if (newMessages.length > 0) {
+          setMessages(prevMessages => [...prevMessages, ...newMessages]);
+        }
       }
     };
-    const handleWrongMoves= (positions: Position[], type: number) => {
+
+    const handleWrongMoves = (positions: Position[], type: number) => {
       if (piece_type === type) {
-        setMessages(positions.map(pos => ({text:JSON.stringify(pos),error:true})));
+        setMessages(prevMessages => {
+          const newMessages = [];
+          for (const pos of positions) {
+            const messageText = JSON.stringify(pos);
+            // Check if this message already exists with error status
+            const errorExists = prevMessages.some(msg => msg.text === messageText && msg.error);
+
+            if (!errorExists) {
+              // Find and replace any non-error version of this message
+              const updatedMessages = prevMessages.filter(msg => msg.text !== messageText);
+              // Add the error version
+              return [...updatedMessages, { text: messageText, error: true }];
+            }
+          }
+          return prevMessages;
+        });
       }
     };
 
@@ -64,20 +84,27 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
     socket.on("Wrong move", handleWrongMoves);
 
     return () => {
-      socket.off("move piece", handleMovePiece);
+      socket.off("moves", handleMovePiece);
+      socket.off("Wrong move", handleWrongMoves);
     };
-  }, [isConnected, socket]); // Depend on both socket and connection state
+  }, [isConnected, socket, piece_type, messages]);
 
   return (
     <div className={`${piece_type === 0 ? 'bg-gray-900' : 'bg-black'} flex flex-col`}>
-      <div className="flex flex-col">
-        {messages.map((value, index) => (
-          <a key={index} className={`${piece_type === 0 ? 'bg-black text-white' : 'bg-white text-black'} ${value.error=== true ? 'line-through' : 'no-underline'}`}>
-            {value.text}
-          </a>
+      {/* Scrollable container for messages */}
+      <div className="flex flex-col overflow-y-auto max-h-64">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`${piece_type === 0 ? 'bg-black text-white' : 'bg-white text-black'} ${msg.error ? 'line-through' : ''}`}
+          >
+            {msg.text}
+          </div>
         ))}
       </div>
-      <a className={`${slow ? 'bg-green-600' : 'bg-red-500'} border - black"`}>{time}</a>
-    </div >
+      <div className={`${slow ? 'bg-green-600' : 'bg-red-500'} border-black`}>
+        {time}
+      </div>
+    </div>
   );
 }
