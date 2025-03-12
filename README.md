@@ -20,8 +20,8 @@ Ce projet est un serveur et interface de dames en temps réel développé avec T
 1. **Cloner le Répertoire**
 
    ```bash
-   git clone https://github.com/votreutilisateur/votre-repo.git
-   cd votre-repo
+   git clone  https://github.com/Zanehisako/Checkers-react.git
+   cd Server
    ```
 
 2. **Installer les Dépendances**
@@ -38,11 +38,6 @@ Ce projet est un serveur et interface de dames en temps réel développé avec T
    npm run build
    ```
 
-   Vous pouvez également exécuter directement le serveur en utilisant [ts-node](https://github.com/TypeStrong/ts-node) :
-
-   ```bash
-   npx ts-node src/server.ts
-   ```
 
 4. **Démarrer le Serveur**
 
@@ -165,11 +160,11 @@ Ce projet est l'interface web du jeu de dames en temps réel, développée avec 
 
 ## Installation  
 
-1. **Cloner le dépôt**  
+1. **Cloner le dépôt si tu ai pas deja**  
 
    ```bash
-   git clone https://github.com/votreutilisateur/votre-repo-web.git
-   cd votre-repo-web
+   git clone https://github.com/Zanehisako/Checkers-react.git
+   cd Interface_web
    ```
 
 2. **Installer les dépendances**  
@@ -181,11 +176,11 @@ Ce projet est l'interface web du jeu de dames en temps réel, développée avec 
 3. **Démarrer l’application**  
 
    ```bash
-   npm run dev
+   npm start
    ```
 
-   Par défaut, l’interface est accessible sur `http://localhost:5173` (si vous utilisez Vite) ou `http://localhost:3000` (si vous utilisez Create React App).  
+   Par défaut, l’interface est accessible sur `http://localhost:3000`   
 
 
-Vous pouvez également héberger l’application sur une plateforme comme Vercel, Netlify ou un serveur Nginx.  
+
 
