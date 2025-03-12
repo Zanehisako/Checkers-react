@@ -217,14 +217,14 @@ time) => {
         io.to(current_room.name).emit("update piece", newPos, type, time);
         if (!multiple) {
             // Switch turn if not in a multiple–capture sequence.
-            current_room.turn = type === 0 ? 0 : 1;
-            io.to(current_room.name).except(player_name).emit("turn");
+            current_room.turn = type === 0 ? 1 : 0;
+            io.to(current_room.name).except(player_name).emit("turn", current_room.turn);
         }
         return result;
     }
     else {
         io.to(current_room.name).emit("Wrong move", current_room.moves_played[type], type);
-        io.to(player_name).emit("turn");
+        io.to(player_name).emit("turn", current_room.turn);
     }
 };
 const updateGamePawn = (multiple, player_name, current_room, position, type, time) => {
@@ -325,13 +325,13 @@ const updateGamePawn = (multiple, player_name, current_room, position, type, tim
         io.to(current_room.name).emit("moves", current_room.moves_played[type], type);
         io.to(current_room.name).emit("update piece", position, type, time);
         if (!multiple) {
-            current_room.turn = type == 0 ? 0 : 1;
-            io.to(current_room.name).except(player_name).emit("turn");
+            current_room.turn = type == 0 ? 1 : 0;
+            io.to(current_room.name).except(player_name).emit("turn", current_room.turn);
         }
     }
     else {
         io.to(current_room.name).emit("Wrong move", current_room.moves_played[type], type);
-        io.to(player_name).emit("turn");
+        io.to(player_name).emit("turn", current_room.turn);
     }
     return result;
 };
@@ -449,7 +449,7 @@ const updateBoard = (board, newPosition, type) => {
                 else {
                     board[0][indexBlack] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 0 ? true : false }; // ✅ Direct array update
                 }
-                if (board[0].length === 0) {
+                if (board[0].length === 0 || board[1].length === 0) {
                     return "Game Over";
                 }
             }
@@ -463,7 +463,7 @@ const updateBoard = (board, newPosition, type) => {
                 else {
                     board[1][indexWhite] = { ...newPosition, index: `${newPosition.x}${newPosition.y}`, king: newPosition.y === 7 ? true : false }; // ✅ Direct array update
                 }
-                if (board[1].length === 0) {
+                if (board[0].length === 0 || board[1].length === 0) {
                     return "Game Over";
                 }
             }
@@ -540,7 +540,7 @@ io.on("connection", (socket) => {
                     io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()));
                     console.log("Room", room.toString());
                     io.to(room.toString()).except(socket.id).emit("board", current_room.board);
-                    io.to(room.toString()).except(socket.id).emit("turn");
+                    io.to(room.toString()).except(socket.id).emit("turn", current_room.turn);
                     io.to(room.toString()).except(socket.id).emit("Player Joined", socket.id);
                     break;
                 default:
@@ -579,7 +579,7 @@ io.on("connection", (socket) => {
                     size: 1,
                     players: new Map,
                     spectators: [],
-                    turn: 0, //0 cuz the first move is gonna be of type 1 white 
+                    turn: 1, //1 cuz the first move is gonna be of type 1 white 
                     board: initboard(),
                     moves_played: [[], []]
                 };
@@ -631,11 +631,11 @@ io.on("connection", (socket) => {
             switch (position.king) {
                 case true:
                     updateGameKing(false, socket.id, current_room, position, type, time);
-                    io.to(current_room.name).except(socket.id).emit("turn");
+                    io.to(current_room.name).except(socket.id).emit("turn", current_room.turn);
                     break;
                 case false:
                     updateGamePawn(false, socket.id, current_room, position, type, time);
-                    io.to(current_room.name).except(socket.id).emit("turn");
+                    io.to(current_room.name).except(socket.id).emit("turn", current_room.turn);
                     break;
             }
         }
@@ -653,13 +653,14 @@ io.on("connection", (socket) => {
                 return;
             }
             if (repeatedMoves(current_room, position, type)) {
+                io.to(current_room.name).emit("Game Over");
                 console.log("Game Over");
                 return;
             }
             current_room.moves_played[type].push(position);
             console.log("current Room", current_room);
             console.log("type", type);
-            if (current_room?.turn == type) {
+            if (current_room?.turn != type) {
                 console.log("its not u're turn nigga damn!", type);
                 return;
             }

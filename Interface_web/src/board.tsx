@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useRef, useState } from "react";
 import { Piece } from "./piece";
 import { Cell } from "./cell";
 import { useSocket } from "./socketcontext";
@@ -50,11 +50,68 @@ export function Board({
 
 export function MainBoard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isOurTurn, setOurTurn] = useState(false);
+  const [playerType, setType] = useState(1);
   const [blackPieces, setBlackPieces] = useState<Position[]>(getInitialBlackPositions());
   const [whitePieces, setWhitePieces] = useState<Position[]>(getInitialWhitePositions());
   const [selectedCell, setSelectedCell] = useState([0, 0]);
   const socket = useSocket();
   const boardSize = 8;
+  const isFirstSelectionRef = useRef(true);
+  const previousSelectionRef = useRef("");
+  const kingsRef = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!selectedCell || selectedCell.length === 0 || !isOurTurn) return;
+
+    console.log('selectedCell', selectedCell);
+
+    if (isFirstSelectionRef.current) {
+      console.log('Selecting piece at', selectedCell);
+      previousSelectionRef.current = `${selectedCell[0]}${selectedCell[1]}`;
+      isFirstSelectionRef.current = false;
+    } else {
+      console.log('Moving piece from', previousSelectionRef.current, 'to', selectedCell);
+      console.log("kings", kingsRef.current);
+
+      const isking = kingsRef.current.has(`${previousSelectionRef.current}`);
+      console.log('isking', isking);
+
+      if (isking) {
+        kingsRef.current.delete(previousSelectionRef.current);
+        kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
+        console.log("kings", kingsRef.current);
+      }
+
+      const move = {
+        index: previousSelectionRef.current,
+        x: selectedCell[0],
+        y: selectedCell[1],
+        king: isking
+      };
+
+      switch (playerType) {
+        case 0:
+          if (move.y === 0) {
+            console.log("added black king");
+            kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
+            console.log("kings", kingsRef.current);
+          }
+          break;
+        case 1:
+          if (move.y === 7) {
+            console.log("added white king");
+            kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
+            console.log("kings", kingsRef.current);
+          }
+          break;
+      }
+
+      socket.emit("move piece", move, playerType, 0);
+      isFirstSelectionRef.current = true;
+      previousSelectionRef.current = "";
+    }
+  }, [selectedCell]);
 
   useEffect(() => {
     const handleBoardUpdate = (boards: Position[][]) => {
@@ -62,8 +119,12 @@ export function MainBoard() {
       setWhitePieces(boards[1]);
       setIsLoading(false);
     };
-
+    const handleTurn = (type: number) => {
+      setType(type);
+      setOurTurn(true);
+    };
     socket.on("board", handleBoardUpdate);
+    socket.on("turn", handleTurn);
     socket.emit("get board");
 
     return () => {

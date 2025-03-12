@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Board, MainBoard } from "./board";
-import io from "socket.io-client";
+import { MainBoard } from "./board";
 import { TimePanel } from "./timepanel";
 import { useSocket } from "./socketcontext";
 import { toast, ToastContainer } from "react-toastify";
@@ -44,18 +43,15 @@ function Client() {
       setTime1((prevTime1) => {
         const newTime1 = prevTime1 + time;
         setSlowIndex(newTime1 > Time2 ? 1 : 0); // Compare against Time2
-        console.log("Updated Time1", newTime1);
         return newTime1;
       });
     } else if (type === 1) {
       setTime2((prevTime2) => {
         const newTime2 = prevTime2 + time;
         setSlowIndex(Time1 > newTime2 ? 1 : 0); // Compare against Time1
-        console.log("Updated Time2", newTime2);
         return newTime2;
       });
     }
-    console.log("Current SlowIndex", slowIndex);
   };
   // Handle game events only when connected
   const notify = (id: string) => toast("A user Has connected: " + id);
