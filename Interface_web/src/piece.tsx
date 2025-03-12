@@ -3,7 +3,7 @@ import { useSocket } from "./socketcontext";
 
 interface PieceProps {
   index: string;
-  SelectedIndex: number[];
+  SelectedIndex: [number, number] | undefined;
   type: number;
   source: string;
   x: number;

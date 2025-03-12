@@ -12,8 +12,8 @@ export interface Position {
 interface BoardProp {
   type: number;
   positions: Position[];
-  cellIndex: number[];
-  SetCell: React.Dispatch<React.SetStateAction<number[]>>;
+  cellIndex: [number, number] | undefined;
+  SetCell: React.Dispatch<React.SetStateAction<[number, number] | undefined>>;
   move: (position: Position, type: number) => void;
 }
 
@@ -54,7 +54,7 @@ export function MainBoard() {
   const [playerType, setType] = useState(1);
   const [blackPieces, setBlackPieces] = useState<Position[]>(getInitialBlackPositions());
   const [whitePieces, setWhitePieces] = useState<Position[]>(getInitialWhitePositions());
-  const [selectedCell, setSelectedCell] = useState([0, 0]);
+  const [selectedCell, setSelectedCell] = useState<[number, number]>();
   const socket = useSocket();
   const boardSize = 8;
   const isFirstSelectionRef = useRef(true);
@@ -62,7 +62,7 @@ export function MainBoard() {
   const kingsRef = useRef(new Set<string>());
 
   useEffect(() => {
-    if (!selectedCell || selectedCell.length === 0 || !isOurTurn) return;
+    if (!selectedCell || !isOurTurn) return;
 
     console.log('selectedCell', selectedCell);
 
@@ -110,6 +110,7 @@ export function MainBoard() {
       socket.emit("move piece", move, playerType, 0);
       isFirstSelectionRef.current = true;
       previousSelectionRef.current = "";
+      setSelectedCell(undefined)
     }
   }, [selectedCell]);
 
@@ -147,6 +148,7 @@ export function MainBoard() {
           <Cell
             x={x}
             y={y}
+            selected={selectedCell?.[0] === x && selectedCell?.[1] === y ? true : false}
             type={(x + y) % 2 === 0 ? 1 : 0}
             onClickFn={setSelectedCell}
           />
@@ -162,7 +164,7 @@ export function MainBoard() {
       <Board
         type={0}
         positions={blackPieces}
-        cellIndex={selectedCell}
+        cellIndex={selectedCell!}
         SetCell={setSelectedCell}
         move={move}
       />
