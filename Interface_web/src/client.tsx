@@ -38,7 +38,7 @@ function Client() {
     };
   }, [socket]);
 
-  const handleMovePiece = (position: Position, type: number, time: number) => {
+  const handleMovePiece = (_: Position, type: number, time: number) => {
     console.log("time", time);
     if (type === 0) {
       setTime1((prevTime1) => {

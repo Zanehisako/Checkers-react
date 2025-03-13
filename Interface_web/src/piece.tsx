@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSocket } from "./socketcontext";
 
 interface PieceProps {
@@ -20,7 +20,6 @@ interface Position {
 
 export function Piece({
   index,
-  type,
   source,
   x,
   y,
