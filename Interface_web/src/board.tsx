@@ -137,6 +137,12 @@ export function MainBoard() {
     socket.emit("move", { position, type });
   };
 
+  const cancelSelection = (event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent the default context menu
+    isFirstSelectionRef.current = true;
+    setSelectedCell(undefined)
+  }
+
   if (isLoading) {
     return <div className="loading">Loading board...</div>;
   }
@@ -159,7 +165,7 @@ export function MainBoard() {
   }
 
   return (
-    <div className=" grid grid-cols-8 w-128 h-128 relative">
+    <div className=" grid grid-cols-8 w-128 h-128 relative" onContextMenu={cancelSelection}>
       {createCells(boardSize)}
       <Board
         type={0}
