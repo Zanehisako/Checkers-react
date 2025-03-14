@@ -78,33 +78,33 @@ export function MainBoard() {
       console.log('isking', isking);
 
       if (isking) {
-        kingsRef.current.delete(previousSelectionRef.current);
         kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
+        kingsRef.current.delete(previousSelectionRef.current);
         console.log("kings", kingsRef.current);
       }
-
       const move = {
         index: previousSelectionRef.current,
         x: selectedCell[0],
         y: selectedCell[1],
         king: isking
       };
-
-      switch (playerType) {
-        case 0:
-          if (move.y === 0) {
-            console.log("added black king");
-            kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
-            console.log("kings", kingsRef.current);
-          }
-          break;
-        case 1:
-          if (move.y === 7) {
-            console.log("added white king");
-            kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
-            console.log("kings", kingsRef.current);
-          }
-          break;
+      if (!isking) {
+        switch (playerType) {
+          case 0:
+            if (move.y === 0) {
+              console.log("added black king");
+              kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
+              console.log("kings", kingsRef.current);
+            }
+            break;
+          case 1:
+            if (move.y === 7) {
+              console.log("added white king");
+              kingsRef.current.add(`${selectedCell[0]}${selectedCell[1]}`);
+              console.log("kings", kingsRef.current);
+            }
+            break;
+        }
       }
 
       socket.emit("move piece", move, playerType, 0);
