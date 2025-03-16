@@ -1,5 +1,5 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
-import { Piece } from "./piece";
+import { WhitePiece, BlackPiece } from "./piece";
 import { Cell } from "./cell";
 import { useSocket } from "./socketcontext";
 
@@ -7,6 +7,7 @@ export interface Position {
   index: string;
   x: number;
   y: number;
+  king: boolean;
 }
 
 interface BoardProp {
@@ -21,7 +22,6 @@ export function Board({
   type,
   positions,
   cellIndex,
-  move,
 }: BoardProp) {
   const [boardPositions, setBoardPositions] = useState<Position[]>(positions);
 
@@ -32,16 +32,24 @@ export function Board({
   return (
     <>
       {boardPositions.map((position) => (
-        <Piece
-          key={`${type}-${position.index}-${position.x}-${position.y}`}
-          SelectedIndex={cellIndex}
-          type={type === 0 ? 0 : 1}
-          source={type === 0 ? "/pieces/black piece.png" : "/pieces/white piece.png"}
-          index={position.index}
-          x={position.x}
-          y={position.y}
-          onMove={move}
-        />
+        type === 1 ?
+          <WhitePiece
+            king={position.king}
+            key={`${type}-${position.index}-${position.x}-${position.y}`}
+            SelectedIndex={cellIndex}
+            index={position.index}
+            x={position.x}
+            y={position.y}
+          />
+          :
+          <BlackPiece
+            king={position.king}
+            key={`${type}-${position.index}-${position.x}-${position.y}`}
+            SelectedIndex={cellIndex}
+            index={position.index}
+            x={position.x}
+            y={position.y}
+          />
       ))}
     </>
   );
@@ -143,6 +151,49 @@ export function MainBoard() {
     setSelectedCell(undefined)
   }
 
+
+  // Default chess starting positions using your Position interface
+  function getInitialBlackPositions(): Position[] {
+    return [
+      // Pawns (y=1)
+      ...Array(8).fill(0).map((_, x) => ({
+        x,
+        y: 1,
+        index: `${x}${1}`,
+        king: false
+      })),
+      // Other pieces (y=0)
+      { x: 0, y: 0, index: "00", king: false },
+      { x: 7, y: 0, index: "70", king: false },
+      { x: 1, y: 0, index: "10", king: false },
+      { x: 6, y: 0, index: "60", king: false },
+      { x: 2, y: 0, index: "20", king: false },
+      { x: 5, y: 0, index: "50", king: false },
+      { x: 3, y: 0, index: "30", king: false },
+      { x: 4, y: 0, index: "40", king: false },
+    ];
+  }
+
+  function getInitialWhitePositions(): Position[] {
+    return [
+      // Pawns (y=6)
+      ...Array(8).fill(0).map((_, x) => ({
+        x,
+        y: 6,
+        index: `${x}${6}`,
+        king: false
+      })),
+      // Other pieces (y=7)
+      { x: 0, y: 7, index: "07", king: false },
+      { x: 7, y: 7, index: "77", king: false },
+      { x: 1, y: 7, index: "17", king: false },
+      { x: 6, y: 7, index: "67", king: false },
+      { x: 2, y: 7, index: "27", king: false },
+      { x: 5, y: 7, index: "57", king: false },
+      { x: 3, y: 7, index: "37", king: false },
+      { x: 4, y: 7, index: "47", king: false },
+    ];
+  }
   if (isLoading) {
     return <div className="loading">Loading board...</div>;
   }
@@ -183,45 +234,4 @@ export function MainBoard() {
       />
     </div>
   );
-}
-
-// Default chess starting positions using your Position interface
-function getInitialBlackPositions(): Position[] {
-  return [
-    // Pawns (y=1)
-    ...Array(8).fill(0).map((_, x) => ({
-      x,
-      y: 1,
-      index: `${x}${1}`
-    })),
-    // Other pieces (y=0)
-    { x: 0, y: 0, index: "00" },
-    { x: 7, y: 0, index: "70" },
-    { x: 1, y: 0, index: "10" },
-    { x: 6, y: 0, index: "60" },
-    { x: 2, y: 0, index: "20" },
-    { x: 5, y: 0, index: "50" },
-    { x: 3, y: 0, index: "30" },
-    { x: 4, y: 0, index: "40" },
-  ];
-}
-
-function getInitialWhitePositions(): Position[] {
-  return [
-    // Pawns (y=6)
-    ...Array(8).fill(0).map((_, x) => ({
-      x,
-      y: 6,
-      index: `${x}${6}`
-    })),
-    // Other pieces (y=7)
-    { x: 0, y: 7, index: "07" },
-    { x: 7, y: 7, index: "77" },
-    { x: 1, y: 7, index: "17" },
-    { x: 6, y: 7, index: "67" },
-    { x: 2, y: 7, index: "27" },
-    { x: 5, y: 7, index: "57" },
-    { x: 3, y: 7, index: "37" },
-    { x: 4, y: 7, index: "47" },
-  ];
 }
