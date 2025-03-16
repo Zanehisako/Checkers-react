@@ -39,12 +39,11 @@ export function WhitePiece({
     <img
       key={x + y * 8}
       src={king ? "/pieces/white_king.png" : "/pieces/white piece.png"}
-      width={36}
-      height={36}
-      className={"absolute hover:scale-10 transition-transform duration-200 pointer-events-none"}
+      className="absolute hover:scale-10 transition-transform duration-200 pointer-events-none"
       style={{
-        width: 64,
-        transform: `translate(${position_x * 64}px,${position_y * 64}px)`, //this is the position of the piece
+        width: 'calc(100% / 8)', // Makes the piece width 1/8 of the board width
+        height: 'auto', // Maintains aspect ratio
+        transform: `translate(${position_x * 100}%, ${position_y * 107}%)`, // Position based on percentage
       }}
       alt="piece"
       draggable="false"
@@ -74,12 +73,11 @@ export function BlackPiece({
     <img
       key={x + y * 8}
       src={king ? "/pieces/black_king.png" : "/pieces/black piece.png"}
-      width={36}
-      height={36}
-      className={"absolute hover:scale-10 transition-transform duration-200 pointer-events-none"}
+      className="absolute hover:scale-10 transition-transform duration-200 pointer-events-none"
       style={{
-        width: 64,
-        transform: `translate(${position_x * 64}px,${position_y * 64}px)`, //this is the position of the piece
+        width: 'calc(100% / 8)', // Makes the piece width 1/8 of the board width
+        height: 'auto', // Maintains aspect ratio
+        transform: `translate(${position_x * 100}%, ${position_y * 99}%)`, // Position based on percentage
       }}
       alt="piece"
       draggable="false"
