@@ -29,6 +29,7 @@ export function TimePanel({ piece_type, time, slow }: timepanelProp) {
     }
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+
     setIsConnected(socket.connected);
     return () => {
       socket.off('connect', onConnect);

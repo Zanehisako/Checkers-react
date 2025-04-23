@@ -39,7 +39,7 @@ function Client() {
   }, [socket]);
 
   const handleMovePiece = (_: Position, type: number, time: number) => {
-    console.log("time", time);
+    console.log("time from new piece", time);
     if (type === 0) {
       setTime1((prevTime1) => {
         const newTime1 = prevTime1 + time;

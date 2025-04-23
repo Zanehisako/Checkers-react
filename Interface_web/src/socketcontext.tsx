@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, ReactNode, useState } from 'react
 import { Socket, io } from 'socket.io-client';
 
 // Create the socket instance
-const socket: Socket = io("https://checkers-react-production.up.railway.app/", {
+const socket: Socket = io("127.0.0.1:3001", {
   transports: ["websocket"],
   autoConnect: true,
   reconnection: true,

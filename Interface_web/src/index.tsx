@@ -6,7 +6,6 @@ import { SocketProvider } from "./socketcontext";
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Rooms } from "./rooms";
 import { AnimatePresence } from "motion/react"
-import { Lobby } from "./lobby";
 
 const root = ReactDOM.createRoot(document.getElementById("root")!);
 root.render(

@@ -22,15 +22,19 @@ def turn():
                     position_details = list(map(int,input("Enter Position:\n").split()))
                     sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
         case 1:
-            index = input("Enter Index:\n").strip()
+            sio.emit("get board")
+            """ index = input("Enter Index:\n").strip()
             position_details = list(map(int,input("Enter Position:\n").split()))
-            sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10)))
+            sio.emit("move piece",({"index":index,"x":position_details[0],"y":position_details[1],"king":False},player_type,random.randint(10))) """
 
 def Handlerooms(emptyRooms,fullRooms):
     print("empty rooms are ",emptyRooms)
     print("full rooms are ",fullRooms)
+def handleBoard(board):
+    print("full rooms are ",board)
 
 sio.on("rooms",Handlerooms)
+sio.on("board",Handlerooms)
 
 def handleMsg(msg):
     print(msg)

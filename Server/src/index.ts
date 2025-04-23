@@ -101,10 +101,11 @@ const initboard = () => {
       }
     }
   }
-  console.log(black_pieces_pos, white_pieces_pos)
   return [black_pieces_pos, white_pieces_pos];
 };
 
+
+var current_time = Date.now()
 
 const repeatedMoves = (room: Room, position: Position, type: number): boolean => {
   if (room.moves_played[type].length < 2) {
@@ -113,8 +114,6 @@ const repeatedMoves = (room: Room, position: Position, type: number): boolean =>
 
   const last = room.moves_played[type].length - 1;
 
-  console.log(`last move: ${JSON.stringify(room.moves_played[type][last])}`);
-  console.log(`new move: ${JSON.stringify(position)}`);
 
   // Function to compare two JSON objects
   const isEqual = (obj1: any, obj2: any): boolean => {
@@ -123,6 +122,8 @@ const repeatedMoves = (room: Room, position: Position, type: number): boolean =>
 
   if (isEqual(room.moves_played[type][last], position) &&
     isEqual(room.moves_played[type][last], room.moves_played[type][last - 1])) {
+    console.log(`last move: ${JSON.stringify(room.moves_played[type][last])}`);
+    console.log(`new move: ${JSON.stringify(position)}`);
     console.log(`player ${type} repeated a move more than 3 times`);
     return true;
   }
@@ -135,7 +136,6 @@ const calculateKingMove = (
   newPos: Position,
   player: number
 ): MovesKing => {
-  console.time("King Logic took:");
   try {
     const playerBoard = boards[player];
     const enemyBoard = boards[1 - player];
@@ -186,7 +186,6 @@ const calculateKingMove = (
     // it’s not supported in this simple implementation.
     return MovesKing.None;
   } finally {
-    console.timeEnd("King Logic took:");
   }
 };
 
@@ -198,7 +197,6 @@ const updateGameKing = (
   type: number,    // player number (0 or 1)
   time: number
 ) => {
-  console.log("time", time);
 
   // Check if any capture move is mandatory.
   /*
@@ -234,7 +232,6 @@ const updateGameKing = (
     io.to(player_name).emit("Error", "You must capture an opponent's piece!");
     return;
   }*/
-  console.log("Result from king move logic:", result);
 
   if (result !== MovesKing.None) {
     // Update the board to reflect the new position.
@@ -281,17 +278,18 @@ const updateGameKing = (
       // Switch turn if not in a multiple–capture sequence.
       current_room.turn = type === 0 ? 1 : 0;
       io.to(current_room.name).except(player_name).emit("turn", current_room.turn);
+      current_time = Date.now()
     }
     return result;
   }
   else {
     io.to(current_room!.name).emit("Wrong move", current_room.moves_played[type], type)
     io.to(player_name).emit("turn", current_room.turn)
+    current_time = Date.now()
   }
 };
 
 const updateGamePawn = (multiple: boolean, player_name: string, current_room: Room, position: Position, type: number, time: number) => {
-  console.log("time", time);
   // Check if a mandatory capture exists
   /*
   const captureRequired = hasMandatoryCapture(current_room.board, type);
@@ -394,11 +392,15 @@ const updateGamePawn = (multiple: boolean, player_name: string, current_room: Ro
     if (!multiple) {
       current_room!.turn = type == 0 ? 1 : 0;
       io.to(current_room!.name).except(player_name).emit("turn", current_room.turn)
+
+      current_time = Date.now()
     }
   }
   else {
     io.to(current_room!.name).emit("Wrong move", current_room.moves_played[type], type)
     io.to(player_name).emit("turn", current_room.turn)
+
+    current_time = Date.now()
   }
   return result
 }
@@ -457,7 +459,6 @@ const calculateMove = (
   newPos: Position,
   player: number
 ): Moves => {
-  console.time("Logic took:");
   try {
     // Get the moving piece from the player's board by matching the index.
     const playerBoard = boards[player];
@@ -518,13 +519,11 @@ const calculateMove = (
     // If none of the valid cases match, return None.
     return Moves.None;
   } finally {
-    console.timeEnd("Logic took:");
   }
 };
 
 
 const updateBoard = (board: Position[][], newPosition: Position, type: number) => {
-  console.log("updating board with position", newPosition)
   switch (type) {
     case 0:
       const indexBlack = board[0].findIndex(p => p.index === newPosition.index);
@@ -557,15 +556,12 @@ const updateBoard = (board: Position[][], newPosition: Position, type: number) =
 };
 
 const removePiece = (room_number: string, boards: Position[][], removeIndex: string, type: number) => {
-  console.log("removed index", removeIndex)
   switch (type) {
     case 0:
       const index_black = boards[0].findIndex(
         (item) => item.index === removeIndex,
       );
-      console.log("before black board :", boards[0]);
       boards[0].splice(index_black, 1);
-      console.log("new black board :", boards[0]);
 
       break;
 
@@ -575,7 +571,6 @@ const removePiece = (room_number: string, boards: Position[][], removeIndex: str
       );
 
       boards[1].splice(index_white, 1);
-      console.log("new white board :", boards[1]);
       break;
   }
 
@@ -614,6 +609,8 @@ io.on("connection", (socket) => {
       });
       current_room!.turn = type == 0 ? 0 : 1;
       io.to(current_room!.name).except(socket.id).emit("turn")
+
+      current_time = Date.now()
     } catch (error) {
       console.log(error)
       io.to(current_room!.name).emit("Error", error)
@@ -640,6 +637,8 @@ io.on("connection", (socket) => {
           console.log("Room", room.toString())
           io.to(room.toString()).except(socket.id).emit("board", current_room.board)
           io.to(room.toString()).except(socket.id).emit("turn", current_room.turn)
+
+          current_time = Date.now()
           io.to(room.toString()).except(socket.id).emit("Player Joined", socket.id)
           break;
 
@@ -664,7 +663,6 @@ io.on("connection", (socket) => {
     });
 
   socket.on("get board", async () => {
-    console.log("room", current_room)
     socket.emit("board", current_room.board)
     socket.emit("moves", current_room.moves_played[0], 0)
     socket.emit("moves", current_room.moves_played[1], 1)
@@ -721,7 +719,6 @@ io.on("connection", (socket) => {
   });
   socket.on("move piece puzzle", async (position: Position, type: number, time: number, puzzle_room_name: string) => {
     const puzzle_room: PuzzleRoom = puzzlesRooms[puzzle_room_name]
-    console.log("position", position)
     console.log("type", type)
     //this make sure only players can send moves not spectators for example
     try {
@@ -733,11 +730,15 @@ io.on("connection", (socket) => {
         case true:
           updateGameKing(false, socket.id, current_room, position, type, time)
           io.to(current_room!.name).except(socket.id).emit("turn", current_room.turn)
+
+          current_time = Date.now()
           break;
 
         case false:
           updateGamePawn(false, socket.id, current_room, position, type, time)
           io.to(current_room!.name).except(socket.id).emit("turn", current_room.turn)
+
+          current_time = Date.now()
           break;
       }
 
@@ -748,8 +749,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("move piece", async (position: Position, type: number, time: number) => {
-    console.log("position", position)
-    console.log("type", type)
     //this make sure only players can send moves not spectators for example
     try {
       if (!current_room?.players.has(socket.id)) {
@@ -760,9 +759,9 @@ io.on("connection", (socket) => {
         console.log("Game Over")
         return
       }
+      time = (Date.now() - current_time) / 1000
+      console.log("player took:", time)
       current_room.moves_played[type].push(position)
-      console.log("current Room", current_room)
-      console.log("type", type)
       if (current_room?.turn != type) {
         console.log("its not u're turn nigga damn!", type)
         return;

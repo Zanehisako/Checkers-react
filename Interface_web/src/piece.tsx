@@ -28,7 +28,6 @@ export function WhitePiece({
 
   useEffect(() => {
     socket.on("update piece", (newPos: Position) => {
-      console.log("recived new pos: ,");
       if (newPos.index === index) {
         setX(newPos.x);
         setY(newPos.y);
@@ -62,7 +61,6 @@ export function BlackPiece({
 
   useEffect(() => {
     socket.on("update piece", (newPos: Position) => {
-      console.log("recived new pos: ,");
       if (newPos.index === index) {
         setX(newPos.x);
         setY(newPos.y);
