@@ -3,6 +3,7 @@ import cors from "cors"; // Import CORS middleware
 import http from "http"; // Import Node's HTTP module
 import { Server } from "socket.io"; // Import Socket.IO Server class
 import { randomUUID } from "crypto";
+import { readFile } from "node:fs/promises"
 
 interface Position {
   index: string;
@@ -107,6 +108,23 @@ const initboard = () => {
 
 var current_time = Date.now()
 
+
+
+//a get route that returns the leaderboard of players
+app.get("/leaderboard", async (_, res) => {
+  try {
+    const data = await readFile("./leaderboard.json")
+    console.log(data.toString())
+    res.json(JSON.parse(data.toString()))
+  }
+  catch (error) {
+    res.json(error)
+    console.log(error)
+  }
+
+})
+
+
 const repeatedMoves = (room: Room, position: Position, type: number): boolean => {
   if (room.moves_played[type].length < 2) {
     return false;
@@ -130,6 +148,8 @@ const repeatedMoves = (room: Room, position: Position, type: number): boolean =>
 
   return false;
 };
+
+
 
 const calculateKingMove = (
   boards: Position[][],
@@ -188,6 +208,8 @@ const calculateKingMove = (
   } finally {
   }
 };
+
+
 
 const updateGameKing = (
   multiple: boolean,

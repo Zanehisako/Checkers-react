@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors")); // Import CORS middleware
 const http_1 = __importDefault(require("http")); // Import Node's HTTP module
 const socket_io_1 = require("socket.io"); // Import Socket.IO Server class
 const crypto_1 = require("crypto");
+const promises_1 = require("node:fs/promises");
 var Moves;
 (function (Moves) {
     Moves[Moves["None"] = 0] = "None";
@@ -71,6 +72,18 @@ const initboard = () => {
     return [black_pieces_pos, white_pieces_pos];
 };
 var current_time = Date.now();
+//a get route that returns the leaderboard of players
+app.get("/leaderboard", async (_, res) => {
+    try {
+        const data = await (0, promises_1.readFile)("./leaderboard.json");
+        console.log(data.toString());
+        res.json(JSON.parse(data.toString()));
+    }
+    catch (error) {
+        res.json(error);
+        console.log(error);
+    }
+});
 const repeatedMoves = (room, position, type) => {
     if (room.moves_played[type].length < 2) {
         return false;

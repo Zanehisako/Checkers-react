@@ -1,0 +1,142 @@
+[
+    {
+        "id": "1",
+        "name": "Bekhechi-Hassain",
+        "points": 36,
+        "wins": 7,
+        "draws": 0,
+        "losses": 15,
+        "totalTime": 951,
+        "totalErrors": 0
+    },
+    {
+        "id": "2",
+        "name": "Belarbi-Belarbi",
+        "points": 54,
+        "wins": 10,
+        "draws": 12,
+        "losses": 0,
+        "totalTime": 1903,
+        "totalErrors": 0
+    },
+    {
+        "id": "3",
+        "name": "Belkhouche-Bouayed",
+        "points": 42,
+        "wins": 7,
+        "draws": 6,
+        "losses": 9,
+        "totalTime": 37547,
+        "totalErrors": 0
+    },
+    {
+        "id": "4",
+        "name": "Benyelles",
+        "points": 32,
+        "wins": 5,
+        "draws": 0,
+        "losses": 17,
+        "totalTime": 23698,
+        "totalErrors": 0
+    },
+    {
+        "id": "5",
+        "name": "Bouziani-Oudjedi",
+        "points": 54,
+        "wins": 10,
+        "draws": 12,
+        "losses": 0,
+        "totalTime": 1581,
+        "totalErrors": 0
+    },
+    {
+        "id": "6",
+        "name": "Cherki-Maachou",
+        "points": 0,
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "totalTime": 0,
+        "totalErrors": 0
+    },
+    {
+        "id": "7",
+        "name": "Habi",
+        "points": 30,
+        "wins": 4,
+        "draws": 0,
+        "losses": 18,
+        "totalTime": 1262,
+        "totalErrors": 0
+    },
+    {
+        "id": "8",
+        "name": "Mekelleche",
+        "points": 55,
+        "wins": 11,
+        "draws": 11,
+        "losses": 0,
+        "totalTime": 2737,
+        "totalErrors": 0
+    },
+    {
+        "id": "9",
+        "name": "Mekidiche",
+        "points": 28,
+        "wins": 2,
+        "draws": 2,
+        "losses": 18,
+        "totalTime": 23429,
+        "totalErrors": 30
+    },
+    {
+        "id": "10",
+        "name": "Mekkaoui",
+        "points": 55,
+        "wins": 11,
+        "draws": 11,
+        "losses": 0,
+        "totalTime": 4847,
+        "totalErrors": 0
+    },
+    {
+        "id": "11 ",
+        "name": "Mezouari",
+        "points": 0,
+        "wins": 0,
+        "draws": 0,
+        "losses": 0,
+        "totalTime": 0,
+        "totalErrors": 0
+    },
+    {
+        "id": "12",
+        "name": "Sabra",
+        "points": 55,
+        "wins": 11,
+        "draws": 11,
+        "losses": 0,
+        "totalTime": 1462,
+        "totalErrors": 0
+    },
+    {
+        "id": "13",
+        "name": "Smahi",
+        "points": 32,
+        "wins": 5,
+        "draws": 0,
+        "losses": 17,
+        "totalTime": 1183,
+        "totalErrors": 0
+    },
+    {
+        "id": "14",
+        "name": "Taibi",
+        "points": 55,
+        "wins": 11,
+        "draws": 11,
+        "losses": 0,
+        "totalTime": 1429,
+        "totalErrors": 0
+    }
+]
