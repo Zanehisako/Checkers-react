@@ -78,6 +78,7 @@ export function Rooms() {
   return (
     <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center gap-4 text-white">
       <GlowButton size="large" color="green" text="Create Room" onClick={() => setIsOpen(true)} />
+      <GlowButton size="large" color="blue" text="Leaderboard" onClick={() => navigate(`/leaderboard`)} />
 
       <AnimatePresence>
         {/* List of rooms - moved outside AnimatePresence */}
