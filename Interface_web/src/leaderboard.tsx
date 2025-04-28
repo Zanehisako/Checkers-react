@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from "motion/react"
 
 interface data {
-  id: string,
+  id: number,
   name: string,
   points: number
   wins: number
@@ -17,6 +17,15 @@ export function Leaderboard() {
   const [data, setData] = useState<data[]>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  //to sort the leaderbord
+  const [idAsc, setIDAscending] = useState(true);
+  const [pointsAsc, setPointAscending] = useState(true);
+  const [winsAsc, setAscendingWins] = useState(true);
+  const [LossesAsc, setAscendingLosses] = useState(true);
+  const [DrawsAsc, setAscendingDraws] = useState(true);
+  const [TotalTimeAsc, setAscendingTotalTime] = useState(true);
+  const [TotalErrorsAsc, setAscendingTotalErrors] = useState(true);
 
   const variants = {
     hidden: { opacity: 0, y: -50, borderWidth: 0 }, // Start position for the animation
@@ -42,8 +51,8 @@ export function Leaderboard() {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        const result = await response.json();
-        setData(result);
+        const result: data[] = await response.json();
+        setData(result.sort((a, b) => b.points - a.points));
       } catch (error: any) {
         setError(error);
       } finally {
@@ -66,28 +75,103 @@ export function Leaderboard() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center bg-gray-900 text-white">
       <h1 className='font-bold '>Leaderboard</h1>
       <table cellSpacing={5} cellPadding={15} >
-        <tr>
-          <th>Name</th>
-          <th>Points</th>
-          <th>Wins</th>
-          <th>Draws</th>
-          <th>Loses</th>
-          <th>TotalTime</th>
-          <th>TotalErrors</th>
-        </tr>
-        {
-          data!.map((player: data, index) => {
-            return <motion.tr className='border' layout key={player.id} variants={variants} initial="hidden" animate="visible" custom={index}>
-              <td>{player.name}</td>
-              <td>{player.points}</td>
-              <td>{player.wins}</td>
-              <td>{player.draws}</td>
-              <td>{player.losses}</td>
-              <td>{player.totalTime}</td>
-              <td>{player.totalErrors}</td>
-            </motion.tr>
-          })
-        }
+        <thead>
+          <tr>
+
+            <th>Name</th>
+
+            <th onClick={() => {
+              setData([...data!].sort((a, b) => {
+                if (pointsAsc) {
+                  setPointAscending(false)
+                  return (b.points - a.points)
+                } else {
+                  setPointAscending(true)
+                  return a.points - b.points
+                }
+
+              })); console.log('hello')
+            }}>Points</th>
+            <th onClick={() => {
+              setData([...data!].sort((a, b) => {
+                if (winsAsc) {
+                  setAscendingWins(false)
+                  return (b.wins - a.wins)
+                } else {
+                  setAscendingWins(true)
+                  return a.wins - b.wins
+                }
+
+              })); console.log('hello')
+            }}>wins</th>
+            <th onClick={() => {
+              setData([...data!].sort((a, b) => {
+                if (DrawsAsc) {
+                  setAscendingDraws(false)
+                  return (b.draws - a.draws)
+                } else {
+                  setAscendingDraws(true)
+                  return a.draws - b.draws
+                }
+
+              })); console.log('hello')
+            }}>draws</th>
+
+            <th onClick={() => {
+              setData([...data!].sort((a, b) => {
+                if (LossesAsc) {
+                  setAscendingLosses(false)
+                  return (b.losses - a.losses)
+                } else {
+                  setAscendingLosses(true)
+                  return a.losses - b.losses
+                }
+
+              })); console.log('hello')
+            }}>Losses</th>
+
+            <th onClick={() => {
+              setData([...data!].sort((a, b) => {
+                if (TotalTimeAsc) {
+                  setAscendingTotalTime(false)
+                  return (b.totalTime - a.totalTime)
+                } else {
+                  setAscendingTotalTime(true)
+                  return a.totalTime - b.totalTime
+                }
+              })); console.log('hello')
+            }}>TotalTime</th>
+
+            <th onClick={() => {
+              setData([...data!].sort((a, b) => {
+                if (TotalErrorsAsc) {
+                  setAscendingTotalErrors(false)
+                  return (b.totalErrors - a.totalErrors)
+                } else {
+                  setAscendingTotalErrors(true)
+                  return a.totalErrors - b.totalErrors
+                }
+              })); console.log('hello')
+            }}>TotalErrors</th>
+
+
+          </tr>
+        </thead>
+        <tbody>
+          {
+            data!.map((player: data, index) => {
+              return <motion.tr className='border' layout key={player.id} variants={variants} initial="hidden" animate="visible" custom={index}>
+                <td>{player.name}</td>
+                <td>{player.points}</td>
+                <td>{player.wins}</td>
+                <td>{player.draws}</td>
+                <td>{player.losses}</td>
+                <td>{player.totalTime}</td>
+                <td>{player.totalErrors}</td>
+              </motion.tr>
+            })
+          }
+        </tbody>
       </table>
     </motion.div >
   );
