@@ -72,8 +72,8 @@ export function Leaderboard() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center bg-gray-900 text-white">
-      <h1 className='font-bold '>Leaderboard</h1>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-screen w-screen overflow-auto flex flex-col items-center bg-gray-900 text-white gap-5">
+      <h1 className='font-extrabold text-2xl'>Leaderboard</h1>
       <table cellSpacing={5} cellPadding={15} >
         <thead>
           <tr>
@@ -161,13 +161,13 @@ export function Leaderboard() {
           {
             data!.map((player: data, index) => {
               return <motion.tr className='border' layout key={player.id} variants={variants} initial="hidden" animate="visible" custom={index}>
-                <td>{player.name}</td>
-                <td>{player.points}</td>
+                <td className='font-extrabold'>{player.name}</td>
+                <td className='text-green-400 font-extrabold'>{player.points}</td>
                 <td>{player.wins}</td>
                 <td>{player.draws}</td>
                 <td>{player.losses}</td>
                 <td>{player.totalTime}</td>
-                <td>{player.totalErrors}</td>
+                <td className='text-red-600 font-extrabold'>{player.totalErrors}</td>
               </motion.tr>
             })
           }
