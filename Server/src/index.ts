@@ -213,6 +213,7 @@ const calculateKingMove = (
 
 const updateGameKing = (
   multiple: boolean,
+  bot: boolean,
   player_name: string,
   current_room: Room,
   newPos: Position,  // new position the player is moving to
@@ -299,7 +300,11 @@ const updateGameKing = (
     if (!multiple) {
       // Switch turn if not in a multiple–capture sequence.
       current_room.turn = type === 0 ? 1 : 0;
-      io.to(current_room.name).except(player_name).emit("turn", current_room.turn);
+      if (bot) {
+        io.to(current_room!.name).emit("turn", current_room.turn)
+      } else {
+        io.to(current_room.name).except(player_name).emit("turn", current_room.turn);
+      }
       current_time = Date.now()
     }
     return result;
@@ -311,7 +316,7 @@ const updateGameKing = (
   }
 };
 
-const updateGamePawn = (multiple: boolean, player_name: string, current_room: Room, position: Position, type: number, time: number) => {
+const updateGamePawn = (multiple: boolean, bot: boolean, player_name: string, current_room: Room, position: Position, type: number, time: number) => {
   // Check if a mandatory capture exists
   /*
   const captureRequired = hasMandatoryCapture(current_room.board, type);
@@ -413,7 +418,11 @@ const updateGamePawn = (multiple: boolean, player_name: string, current_room: Ro
     io.to(current_room!.name).emit("update piece", position, type, time)
     if (!multiple) {
       current_room!.turn = type == 0 ? 1 : 0;
-      io.to(current_room!.name).except(player_name).emit("turn", current_room.turn)
+      if (bot) {
+        io.to(current_room!.name).emit("turn", current_room.turn)
+      } else {
+        io.to(current_room!.name).except(player_name).emit("turn", current_room.turn)
+      }
 
       current_time = Date.now()
     }
@@ -615,13 +624,13 @@ io.on("connection", (socket) => {
       positions.forEach(position => {
         switch (position.king) {
           case true:
-            const resultKing = updateGameKing(true, socket.id, current_room, position, type, time)
+            const resultKing = updateGameKing(true, false, socket.id, current_room, position, type, time)
             if (resultKing === MovesKing.MoveToEmptySpot) {
               return
             }
             break;
           case false:
-            const resultPawn = updateGamePawn(true, socket.id, current_room, position, type, time)
+            const resultPawn = updateGamePawn(true, false, socket.id, current_room, position, type, time)
             if (resultPawn === Moves.MoveToEmptySpot || Moves.MoveToEmptySpotUpgrade) {
               return
             }
@@ -690,6 +699,7 @@ io.on("connection", (socket) => {
     socket.emit("moves", current_room.moves_played[1], 1)
 
   })
+
   socket.on("create room", async (room_name: string) => {
     try {
 
@@ -719,6 +729,37 @@ io.on("connection", (socket) => {
 
     }
   });
+
+  socket.on("create room bots", async (room_name: string) => {
+    try {
+      current_room = emptyRooms.get(room_name) ?? fullRooms.get(room_name)
+      if (current_room === undefined) {
+        socket.join(room_name);
+        const room: Room = {
+          name: room_name,
+          size: 2,
+          players: new Map<string, number>,
+          spectators: [],
+          turn: 1,//1 cuz the first move is gonna be of type 1 white 
+          board: initboard(),
+          moves_played: [[], []]
+        }
+        current_room = room
+        room.players.set("white", 1)
+        room.players.set("black", 0)
+        socket.emit("msg", "Room Created Successfully");
+        socket.emit("turn", room.turn);
+        fullRooms.set(room_name, room)
+        io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+      } else {
+        socket.emit("msg", "Room does exits");
+      }
+    } catch (error) {
+      console.log(error)
+      io.emit("Error", error)
+    }
+  });
+
   socket.on("play puzzle", async (puzzle_name: string) => {
     try {
 
@@ -750,14 +791,14 @@ io.on("connection", (socket) => {
       puzzle_room.moves_played.push(position)
       switch (position.king) {
         case true:
-          updateGameKing(false, socket.id, current_room, position, type, time)
+          updateGameKing(false, false, socket.id, current_room, position, type, time)
           io.to(current_room!.name).except(socket.id).emit("turn", current_room.turn)
 
           current_time = Date.now()
           break;
 
         case false:
-          updateGamePawn(false, socket.id, current_room, position, type, time)
+          updateGamePawn(false, false, socket.id, current_room, position, type, time)
           io.to(current_room!.name).except(socket.id).emit("turn", current_room.turn)
 
           current_time = Date.now()
@@ -790,11 +831,11 @@ io.on("connection", (socket) => {
       } else {
         switch (position.king) {
           case true:
-            updateGameKing(false, socket.id, current_room, position, type, time)
+            updateGameKing(false, false, socket.id, current_room, position, type, time)
             break;
 
           case false:
-            updateGamePawn(false, socket.id, current_room, position, type, time)
+            updateGamePawn(false, false, socket.id, current_room, position, type, time)
             break;
         }
       }
@@ -804,6 +845,33 @@ io.on("connection", (socket) => {
       io.to(current_room!.name).emit("msg", error)
     }
   });
+
+  socket.on("move piece bot", async (position: Position, type: number, time: number) => {
+    console.log('current bot room', current_room)
+    if (repeatedMoves(current_room, position, type)) {
+      io.to(current_room.name).emit("Game Over")
+      console.log("Game Over")
+      return
+    }
+    time = (Date.now() - current_time) / 1000
+    console.log("player took:", time)
+    current_room.moves_played[type].push(position)
+    if (current_room?.turn != type) {
+      console.log("its not u're turn nigga damn!", type)
+      return;
+    } else {
+      switch (position.king) {
+        case true:
+          updateGameKing(false, true, socket.id, current_room, position, type, time)
+          break;
+
+        case false:
+          updateGamePawn(false, true, socket.id, current_room, position, type, time)
+          break;
+      }
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
     const isPlayer = current_room.players.has(socket.id)
