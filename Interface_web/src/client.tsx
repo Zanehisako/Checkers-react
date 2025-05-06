@@ -65,6 +65,11 @@ function Client() {
     socket.on("Player Joined", notify)
     socket.on("Error", notifyError)
     socket.on("update piece", handleMovePiece);
+    socket.on("total time", (total_time: number[]) => {
+      console.log("total time", total_time)
+      setTime2(total_time[0]!)
+      setTime1(total_time[1]!)
+    });
     return () => {
       socket.off("update piece", handleMovePiece);
     };

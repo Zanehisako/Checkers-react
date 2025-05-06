@@ -1,31 +1,37 @@
 import socketio
 import time 
-import player1
-import player2
+import checkers_bot 
 
 sio = socketio.Client()
 
 board=[]
+totaltime=[]
 
 def turn(player_type):
     match player_type:
-
         case 1:
-            bestmove = player1.bestMove(board,1)
+            bestmove = checkers_bot.bestMove(board,1)
+            print("white best move is :",bestmove)
             sio.emit("move piece bot",(bestmove,1))
 
         case 0:
-            bestmove = player2.bestMove(board,0)
+            bestmove = checkers_bot.bestMove(board,0)
+            print("black best move is :",bestmove)
             sio.emit("move piece bot",(bestmove,0))
 
 
 def handleBoard(new_board):
     global board 
-    print("old board:",board)
     board = new_board
-    print("new board:",board)
 
 sio.on("board",handleBoard)
+
+def updateTime(new_totaltime):
+    global totaltime 
+    totaltime = new_totaltime
+    print("total time:",totaltime)
+
+sio.on("total time",updateTime)
 
 def handleMsg(msg):
     print(msg)

@@ -20,6 +20,7 @@ interface Room {
   size: number;
   spectators: string[];
   turn: number;
+  total_time: number[]
 }
 
 interface Puzzle {
@@ -108,8 +109,6 @@ const initboard = () => {
 
 var current_time = Date.now()
 
-
-
 //a get route that returns the leaderboard of players
 app.get("/leaderboard", async (_, res) => {
   try {
@@ -162,23 +161,35 @@ const calculateKingMove = (
 
     // Find the moving piece on the player's board.
     const movingPiece = playerBoard.find(piece => piece.index === newPos.index);
-    if (!movingPiece) return MovesKing.None;
+    if (!movingPiece) {
+      console.log("couldnt find king ")
+      return MovesKing.None;
+    }
 
-    // Ensure the piece is actually a king.
-    if (!movingPiece.king) return MovesKing.None;
+    // // Ensure the piece is actually a king.
+    // if (!movingPiece.king) {
+    //   console.log("is not a king")
+    //   return MovesKing.None
+    // };
 
     // Calculate differences.
     const dx = newPos.x - movingPiece.x;
     const dy = newPos.y - movingPiece.y;
 
     // The move must be strictly diagonal.
-    if (Math.abs(dx) !== Math.abs(dy)) return MovesKing.None;
+    if (Math.abs(dx) !== Math.abs(dy)) {
+      console.log("move is not diagonal")
+      return MovesKing.None;
+    }
 
     // Check that the destination square is empty.
     const destinationOccupied = boards[0]
       .concat(boards[1])
       .some(piece => piece.x === newPos.x && piece.y === newPos.y);
-    if (destinationOccupied) return MovesKing.None;
+    if (destinationOccupied) {
+      console.log("destination is Occupied")
+      return MovesKing.None;
+    }
 
     // Simple move: one square diagonal.
     if (Math.abs(dx) === 1) {
@@ -232,6 +243,7 @@ const updateGameKing = (
   const movingPiece = playerBoard.find(piece => piece.index === newPos.index);
   if (!movingPiece) {
     io.to(player_name).emit("Error", "Moving piece not found!");
+    console.log("Error Moving piece not found")
     return;
   }
   const oldX = movingPiece.x;
@@ -290,6 +302,8 @@ const updateGameKing = (
         io.to(current_room.name).emit("update piece", newPos, player, time);
         return;
       }*/
+    } else {
+
     }
 
     // Broadcast the updated board state.
@@ -313,6 +327,7 @@ const updateGameKing = (
     io.to(current_room!.name).emit("Wrong move", current_room.moves_played[type], type)
     io.to(player_name).emit("turn", current_room.turn)
     current_time = Date.now()
+    console.log("wrong move")
   }
 };
 
@@ -334,7 +349,6 @@ const updateGamePawn = (multiple: boolean, bot: boolean, player_name: string, cu
     console.timeEnd("updateGamePawn");
     return;
   }*/
-  console.log("the result of the logic is :", result)
   if (result !== Moves.None) {
     if (result === Moves.EatLeft || Moves.EatRight || Moves.MoveToEmptySpot) {
       const updateResult = updateBoard(current_room.board, { ...position, x: position.x, y: position.y }, type)
@@ -609,7 +623,7 @@ const removePiece = (room_number: string, boards: Position[][], removeIndex: str
 
 io.on("connection", (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`);
-  var current_room: Room | undefined = { name: '', size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: initboard(), moves_played: [[], []] }
+  var current_room: Room | undefined = { name: '', size: 0, players: new Map<string, number>, spectators: [], turn: 1, board: initboard(), moves_played: [[], []], total_time: [0, 0] }
   //join a room 
   console.log("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
 
@@ -689,6 +703,7 @@ io.on("connection", (socket) => {
       } else {
         await socket.join(room.toString())
         io.to(current_room.name).emit("board", current_room.board)
+        io.to(current_room.name).emit("total time", current_room.total_time)
         current_room.spectators.push(socket.id)
       }
     });
@@ -697,7 +712,7 @@ io.on("connection", (socket) => {
     socket.emit("board", current_room.board)
     socket.emit("moves", current_room.moves_played[0], 0)
     socket.emit("moves", current_room.moves_played[1], 1)
-
+    socket.emit("total time", current_room.total_time)
   })
 
   socket.on("create room", async (room_name: string) => {
@@ -713,7 +728,8 @@ io.on("connection", (socket) => {
           spectators: [],
           turn: 1,//1 cuz the first move is gonna be of type 1 white 
           board: initboard(),
-          moves_played: [[], []]
+          moves_played: [[], []],
+          total_time: [0, 0]
         }
         current_room = room
         room.players.set(socket.id, 1)
@@ -742,12 +758,15 @@ io.on("connection", (socket) => {
           spectators: [],
           turn: 1,//1 cuz the first move is gonna be of type 1 white 
           board: initboard(),
-          moves_played: [[], []]
+          moves_played: [[], []],
+          total_time: [0, 0]
         }
         current_room = room
         room.players.set("white", 1)
         room.players.set("black", 0)
         socket.emit("msg", "Room Created Successfully");
+        socket.emit("board", current_room.board);
+        setTimeout(() => 1)
         socket.emit("turn", room.turn);
         fullRooms.set(room_name, room)
         io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
@@ -782,7 +801,6 @@ io.on("connection", (socket) => {
   });
   socket.on("move piece puzzle", async (position: Position, type: number, time: number, puzzle_room_name: string) => {
     const puzzle_room: PuzzleRoom = puzzlesRooms[puzzle_room_name]
-    console.log("type", type)
     //this make sure only players can send moves not spectators for example
     try {
       if (puzzle_room.player !== socket.id) {
@@ -823,7 +841,6 @@ io.on("connection", (socket) => {
         return
       }
       time = (Date.now() - current_time) / 1000
-      console.log("player took:", time)
       current_room.moves_played[type].push(position)
       if (current_room?.turn != type) {
         console.log("its not u're turn nigga damn!", type)
@@ -847,14 +864,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("move piece bot", async (position: Position, type: number, time: number) => {
-    console.log('current bot room', current_room)
     if (repeatedMoves(current_room, position, type)) {
       io.to(current_room.name).emit("Game Over")
       console.log("Game Over")
       return
     }
     time = (Date.now() - current_time) / 1000
-    console.log("player took:", time)
+    current_room.total_time[type] += time
     current_room.moves_played[type].push(position)
     if (current_room?.turn != type) {
       console.log("its not u're turn nigga damn!", type)
@@ -863,10 +879,12 @@ io.on("connection", (socket) => {
       switch (position.king) {
         case true:
           updateGameKing(false, true, socket.id, current_room, position, type, time)
+          io.to(current_room.name).emit("total time", current_room.total_time)
           break;
 
         case false:
           updateGamePawn(false, true, socket.id, current_room, position, type, time)
+          io.to(current_room.name).emit("total time", current_room.total_time)
           break;
       }
     }
@@ -874,6 +892,9 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("🔥: A user disconnected");
+    if (current_room.players.has("white")) {
+      fullRooms.delete(current_room.name)
+    }
     const isPlayer = current_room.players.has(socket.id)
 
     switch (isPlayer) {
