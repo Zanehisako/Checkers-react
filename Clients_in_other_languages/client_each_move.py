@@ -1,6 +1,7 @@
 import socketio
 import time 
 import checkers_bot 
+import checkers_bot_amar
 
 sio = socketio.Client()
 
@@ -15,7 +16,7 @@ def turn(player_type):
             sio.emit("move piece bot",(bestmove,1))
 
         case 0:
-            bestmove = checkers_bot.bestMove(board,0)
+            bestmove = checkers_bot_amar.bestMove(board,0)
             print("black best move is :",bestmove)
             sio.emit("move piece bot",(bestmove,0))
 

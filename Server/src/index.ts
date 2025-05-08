@@ -319,8 +319,8 @@ const updateGameKing = (
       } else {
         io.to(current_room.name).except(player_name).emit("turn", current_room.turn);
       }
-      current_time = Date.now()
     }
+    current_time = Date.now()
     return result;
   }
   else {
@@ -655,11 +655,11 @@ io.on("connection", (socket) => {
       current_room!.turn = type == 0 ? 0 : 1;
       io.to(current_room!.name).except(socket.id).emit("turn")
 
-      current_time = Date.now()
     } catch (error) {
       console.log(error)
       io.to(current_room!.name).emit("Error", error)
     }
+    current_time = Date.now()
   });
 
 
@@ -683,8 +683,8 @@ io.on("connection", (socket) => {
           io.to(room.toString()).except(socket.id).emit("board", current_room.board)
           io.to(room.toString()).except(socket.id).emit("turn", current_room.turn)
 
-          current_time = Date.now()
           io.to(room.toString()).except(socket.id).emit("Player Joined", socket.id)
+          current_time = Date.now()
           break;
 
         default:
@@ -770,6 +770,8 @@ io.on("connection", (socket) => {
         socket.emit("turn", room.turn);
         fullRooms.set(room_name, room)
         io.emit("rooms", Array.from(emptyRooms.keys()), Array.from(fullRooms.keys()))
+
+        current_time = Date.now()
       } else {
         socket.emit("msg", "Room does exits");
       }
@@ -811,7 +813,6 @@ io.on("connection", (socket) => {
         case true:
           updateGameKing(false, false, socket.id, current_room, position, type, time)
           io.to(current_room!.name).except(socket.id).emit("turn", current_room.turn)
-
           current_time = Date.now()
           break;
 
@@ -864,13 +865,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("move piece bot", async (position: Position, type: number, time: number) => {
+    time = (Date.now() - current_time) / 1000
+    current_room.total_time[type] += time
     if (repeatedMoves(current_room, position, type)) {
       io.to(current_room.name).emit("Game Over")
       console.log("Game Over")
       return
     }
-    time = (Date.now() - current_time) / 1000
-    current_room.total_time[type] += time
     current_room.moves_played[type].push(position)
     if (current_room?.turn != type) {
       console.log("its not u're turn nigga damn!", type)
