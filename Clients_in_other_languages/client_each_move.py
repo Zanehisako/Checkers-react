@@ -43,9 +43,14 @@ def gameOver():
     print("Game Over")
     sio.disconnect()
 
+
 sio.on("Game Over",gameOver)
 
+def draw():
+    print("Draw")
+    sio.disconnect()
 
+sio.on("Draw",draw)
 
 sio.on('turn',turn)
 

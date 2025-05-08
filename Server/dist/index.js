@@ -84,20 +84,62 @@ app.get("/leaderboard", async (_, res) => {
         console.log(error);
     }
 });
-const repeatedMoves = (room, position, type) => {
-    if (room.moves_played[type].length < 2) {
+const CheckDraw = (moves_played) => {
+    if (moves_played.length < 2) {
         return false;
     }
-    const last = room.moves_played[type].length - 1;
+    const moveCount = (obj, type) => {
+        var repeated_count = 0;
+        for (let index = 0; index < moves_played[type].length; index++) {
+            const element = moves_played[type][index];
+            if (JSON.stringify(obj) === JSON.stringify(element)) {
+                repeated_count++;
+            }
+        }
+        return repeated_count;
+    };
+    var moves_checked_white = new Set();
+    var moves_checked_black = new Set();
+    var white_draw = false;
+    var black_draw = false;
+    for (let index = 0; index < moves_played[0].length; index++) {
+        const element_white = moves_played[0][index];
+        if (!moves_checked_white.has(element_white)) {
+            moves_checked_white.add(element_white);
+            if (moveCount(element_white, 0) >= 5) {
+                white_draw = true;
+            }
+        }
+        console.log(`move ${JSON.stringify(element_white)} was played: ${moveCount(element_white, 0)}`);
+    }
+    for (let index = 0; index < moves_played[1].length; index++) {
+        const element_black = moves_played[1][index];
+        if (!moves_checked_black.has(element_black)) {
+            moves_checked_black.add(element_black);
+            if (moveCount(element_black, 1) >= 5) {
+                black_draw = true;
+            }
+        }
+    }
+    if (white_draw && black_draw) {
+        return true;
+    }
+    return false;
+};
+const repeatedMoves = (moves_played, position) => {
+    if (moves_played.length < 2) {
+        return false;
+    }
+    const last = moves_played.length - 1;
     // Function to compare two JSON objects
     const isEqual = (obj1, obj2) => {
         return JSON.stringify(obj1) === JSON.stringify(obj2);
     };
-    if (isEqual(room.moves_played[type][last], position) &&
-        isEqual(room.moves_played[type][last], room.moves_played[type][last - 1])) {
-        console.log(`last move: ${JSON.stringify(room.moves_played[type][last])}`);
+    if (isEqual(moves_played[last], position) &&
+        isEqual(moves_played[last], moves_played[last - 1])) {
+        console.log(`last move: ${JSON.stringify(moves_played[last])}`);
         console.log(`new move: ${JSON.stringify(position)}`);
-        console.log(`player ${type} repeated a move more than 3 times`);
+        console.log(`player repeated a move more than 3 times`);
         return true;
     }
     return false;
@@ -107,7 +149,7 @@ const calculateKingMove = (boards, newPos, player) => {
         const playerBoard = boards[player];
         const enemyBoard = boards[1 - player];
         // Find the moving piece on the player's board.
-        const movingPiece = playerBoard.find(piece => piece.index === newPos.index);
+        const movingPiece = playerBoard.find(piece => piece.index.trim() === newPos.index.trim());
         if (!movingPiece) {
             console.log("couldnt find king ");
             return MovesKing.None;
@@ -169,7 +211,7 @@ time) => {
     // Check if any capture move is mandatory.
     /*
     const captureRequired = hasMandatoryCapture(current_room.board, player);
-    console.log(`Mandatory capture required: ${captureRequired}`);
+    console.log(`Mandatory capture required: ${ captureRequired }`);
     */
     // Retrieve the moving king’s original position.
     const playerBoard = current_room.board[type];
@@ -259,10 +301,11 @@ const updateGamePawn = (multiple, bot, player_name, current_room, position, type
     // Check if a mandatory capture exists
     /*
     const captureRequired = hasMandatoryCapture(current_room.board, type);
-    console.log(`Mandatory capture required: ${captureRequired}`);
+    console.log(`Mandatory capture required: ${ captureRequired }`);
     */
     // Check what move type was attempted
     const result = calculateMove(current_room.board, position, type);
+    //console.log("result of logic checking: ", result)
     // Reject non-capture moves if a capture is available
     /*
     if (captureRequired && !(result === Moves.EatLeft || result === Moves.EatRight)) {
@@ -295,10 +338,10 @@ const updateGamePawn = (multiple, bot, player_name, current_room, position, type
         //const captureRequired = hasMandatoryCapture(current_room.board, type);
         switch (result) {
             case Moves.EatLeft:
-                removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
+                removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1} `, type == 0 ? 1 : 0);
                 /* const captureRequiredLeft = hasMandatoryCapture(current_room.board, type);
                 if (captureRequiredLeft && !multiple) {
-                  console.log(`Mandatory capture required: ${captureRequired}`);
+                  console.log(`Mandatory capture required: ${ captureRequired } `);
                   io.to(player_name).emit("Error", "Mandatory capture required")
                   io.to(current_room!.name).emit("board", current_room.board)
                   io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
@@ -307,11 +350,11 @@ const updateGamePawn = (multiple, bot, player_name, current_room, position, type
                 } */
                 break;
             case Moves.EatRight:
-                removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
+                removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1} `, type == 0 ? 1 : 0);
                 /*
                   const captureRequiredRight = hasMandatoryCapture(current_room.board, type);
                   if (captureRequiredRight && !multiple) {
-                    console.log(`Mandatory capture required: ${captureRequired}`);
+                    console.log(`Mandatory capture required: ${ captureRequired } `);
                     io.to(player_name).emit("Error", "Mandatory capture required")
                     io.to(current_room!.name).emit("board", current_room.board)
                     io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
@@ -320,10 +363,10 @@ const updateGamePawn = (multiple, bot, player_name, current_room, position, type
                   }*/
                 break;
             case Moves.EatLeftUpgrage:
-                removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
+                removePiece(current_room.name, current_room.board, `${position.x + 1}${type == 0 ? position.y + 1 : position.y - 1} `, type == 0 ? 1 : 0);
                 /* const captureRequiredLeft_Upgraded = hasMandatoryCapture(current_room.board, type);
                 if (captureRequiredLeft_Upgraded && !multiple) {
-                  console.log(`Mandatory capture required: ${captureRequired}`);
+                  console.log(`Mandatory capture required: ${ captureRequired } `);
                   io.to(player_name).emit("Error", "Mandatory capture required")
                   io.to(current_room!.name).emit("board", current_room.board)
                   io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
@@ -332,10 +375,10 @@ const updateGamePawn = (multiple, bot, player_name, current_room, position, type
                 } */
                 break;
             case Moves.EatRightUpgrage:
-                removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1}`, type == 0 ? 1 : 0);
+                removePiece(current_room.name, current_room.board, `${position.x - 1}${type == 0 ? position.y + 1 : position.y - 1} `, type == 0 ? 1 : 0);
                 /* const captureRequiredRight_Upgraded = hasMandatoryCapture(current_room.board, type);
                 if (captureRequiredRight_Upgraded && !multiple) {
-                  console.log(`Mandatory capture required: ${captureRequired}`);
+                  console.log(`Mandatory capture required: ${ captureRequired } `);
                   io.to(player_name).emit("Error", "Mandatory capture required")
                   io.to(current_room!.name).emit("board", current_room.board)
                   io.to(current_room!.name).emit("moves", current_room.moves_played[type], type)
@@ -399,7 +442,7 @@ const hasMandatoryCapture = (board, player) => {
             const isLandingEmpty = !playerPieces.some((p) => p.x === landX && p.y === landY) &&
                 !opponentPieces.some((p) => p.x === landX && p.y === landY);
             if (isOpponent && isLandingEmpty) {
-                console.log(`Mandatory capture found for player ${player}: piece at (${x}, ${y}) can jump over (${midX}, ${midY}) to (${landX}, ${landY})`);
+                console.log(`Mandatory capture found for player ${player}: piece at(${x}, ${y}) can jump over(${midX}, ${midY}) to(${landX}, ${landY})`);
                 return true;
             }
             return false;
@@ -411,41 +454,55 @@ const calculateMove = (boards, newPos, player) => {
         // Get the moving piece from the player's board by matching the index.
         const playerBoard = boards[player];
         const enemyBoard = boards[1 - player];
-        const movingPiece = playerBoard.find((p) => p.index === newPos.index);
-        if (!movingPiece)
+        const movingPiece = playerBoard.find((p) => p.index.trim() === newPos.index.trim());
+        if (!movingPiece) {
+            console.log("Get the moving piece from the player's board by matching the index.");
             return Moves.None;
+        }
         // Compute the differences between the new position and the old one.
         const dx = newPos.x - movingPiece.x;
         const dy = newPos.y - movingPiece.y;
         // The move must be diagonal: dx and dy must be nonzero and have the same absolute value.
         if (dx === 0 || Math.abs(dx) !== Math.abs(dy)) {
+            console.log("The move must be diagonal");
             return Moves.None;
         }
         // For non-king pieces, enforce forward movement.
         // (Player 0 moves up: new y must be lower; player 1 moves down: new y must be higher.)
         if (!movingPiece.king) {
-            if (player === 0 && dy >= 0)
+            if (player === 0 && dy >= 0) {
+                console.log("Player 0 moves up: new y must be lower; player 1 moves down: new y must be higher.");
                 return Moves.None;
-            if (player === 1 && dy <= 0)
+            }
+            if (player === 1 && dy <= 0) {
+                console.log("Player 0 moves up: new y must be lower; player 1 moves down: new y must be higher.");
                 return Moves.None;
+            }
         }
         // For non-king pieces, only one-step (simple move) or two-step (capture) moves are allowed.
-        if (!movingPiece.king && Math.abs(dx) > 2)
+        if (!movingPiece.king && Math.abs(dx) > 2) {
+            console.log("For non-king pieces, only one-step (simple move) or two-step (capture) moves are allowed.");
             return Moves.None;
+        }
+        ;
         // Ensure the destination is not occupied by any piece.
         const destinationOccupied = boards[0]
             .concat(boards[1])
             .some((p) => p.x === newPos.x && p.y === newPos.y);
-        if (destinationOccupied)
+        if (destinationOccupied) {
+            console.log("occupied");
             return Moves.None;
+        }
         // If moving two steps, it must be a capture move.
         if (Math.abs(dx) === 2) {
             // The piece being jumped over should be exactly midway.
             const midX = movingPiece.x + dx / 2;
             const midY = movingPiece.y + dy / 2;
             const enemyPresent = enemyBoard.some((p) => p.x === midX && p.y === midY);
-            if (!enemyPresent)
+            if (!enemyPresent) {
+                console.log("If moving two steps, it must be a capture move.");
                 return Moves.None;
+            }
             // Determine left or right capture based on horizontal movement.
             // (You can rename these as you prefer; here a leftward move is considered "EatLeft".)
             // Also, check for promotion:
@@ -463,6 +520,7 @@ const calculateMove = (boards, newPos, player) => {
             return Moves.MoveToEmptySpot;
         }
         // If none of the valid cases match, return None.
+        console.log("If none of the valid cases match, return None.");
         return Moves.None;
     }
     finally {
@@ -503,11 +561,11 @@ const updateBoard = (board, newPosition, type) => {
 const removePiece = (room_number, boards, removeIndex, type) => {
     switch (type) {
         case 0:
-            const index_black = boards[0].findIndex((item) => item.index === removeIndex);
+            const index_black = boards[0].findIndex((item) => item.index.trim() === removeIndex.trim());
             boards[0].splice(index_black, 1);
             break;
         case 1:
-            const index_white = boards[1].findIndex((item) => item.index === removeIndex);
+            const index_white = boards[1].findIndex((item) => item.index.trim() === removeIndex.trim());
             boards[1].splice(index_white, 1);
             break;
     }
@@ -711,17 +769,23 @@ io.on("connection", (socket) => {
     });
     socket.on("move piece", async (position, type, time) => {
         //this make sure only players can send moves not spectators for example
+        time = (Date.now() - current_time) / 1000;
+        current_room.total_time[1 - type] += time;
         try {
             if (!current_room?.players.has(socket.id)) {
                 return;
             }
-            if (repeatedMoves(current_room, position, type)) {
+            current_room.moves_played[type].push(position);
+            if (repeatedMoves(current_room.moves_played[type], position)) {
                 io.to(current_room.name).emit("Game Over");
                 console.log("Game Over");
                 return;
             }
-            time = (Date.now() - current_time) / 1000;
-            current_room.moves_played[type].push(position);
+            else if (CheckDraw(current_room.moves_played)) {
+                io.to(current_room.name).emit("Draw");
+                console.log("Draw");
+                return;
+            }
             if (current_room?.turn != type) {
                 console.log("its not u're turn nigga damn!", type);
                 return;
@@ -730,9 +794,11 @@ io.on("connection", (socket) => {
                 switch (position.king) {
                     case true:
                         updateGameKing(false, false, socket.id, current_room, position, type, time);
+                        io.to(current_room.name).emit("total time", current_room.total_time);
                         break;
                     case false:
                         updateGamePawn(false, false, socket.id, current_room, position, type, time);
+                        io.to(current_room.name).emit("total time", current_room.total_time);
                         break;
                 }
             }
@@ -744,13 +810,18 @@ io.on("connection", (socket) => {
     });
     socket.on("move piece bot", async (position, type, time) => {
         time = (Date.now() - current_time) / 1000;
-        current_room.total_time[type] += time;
-        if (repeatedMoves(current_room, position, type)) {
+        current_room.total_time[1 - type] += time;
+        current_room.moves_played[type].push(position);
+        if (repeatedMoves(current_room.moves_played[type], position)) {
             io.to(current_room.name).emit("Game Over");
             console.log("Game Over");
             return;
         }
-        current_room.moves_played[type].push(position);
+        else if (CheckDraw(current_room.moves_played)) {
+            io.to(current_room.name).emit("Draw");
+            console.log("Draw");
+            return;
+        }
         if (current_room?.turn != type) {
             console.log("its not u're turn nigga damn!", type);
             return;
