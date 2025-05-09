@@ -8,8 +8,6 @@ totaltime=[]
 current_player_type=0
 
 def turn(player_type):
-    print("player_type",player_type)
-    print("current_player_type",current_player_type)
     match player_type:
         case 1:
             if current_player_type==1:
